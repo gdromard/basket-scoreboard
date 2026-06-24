@@ -1,138 +1,468 @@
-<!-- version: 1.0 -->
-export default function BasketScoreboard() {
-  const { useEffect, useMemo, useState } = React;
-
-  const [teamA, setTeamA] = useState("Équipe A");
-  const [teamB, setTeamB] = useState("Équipe B");
-  const [scoreA, setScoreA] = useState(0);
-  const [scoreB, setScoreB] = useState(0);
-  const [minutes, setMinutes] = useState(10);
-  const [seconds, setSeconds] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [period, setPeriod] = useState(1);
-  const [history, setHistory] = useState([]);
-
-  useEffect(() => {
-    if (!running) return;
-    const timer = setInterval(() => {
-      if (minutes === 0 && seconds === 0) {
-        setRunning(false);
-        return;
-      }
-      if (seconds === 0) {
-        setMinutes((m) => Math.max(0, m - 1));
-        setSeconds(59);
-      } else {
-        setSeconds((s) => s - 1);
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [running, minutes, seconds]);
-
-  const timeLabel = useMemo(
-    () => `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
-    [minutes, seconds]
-  );
-
-  function addPoints(team, pts) {
-    if (team === "A") {
-      setScoreA((v) => Math.max(0, v + pts));
-      setHistory((h) => [{ label: `${teamA} ${pts > 0 ? "+" : ""}${pts}`, ts: new Date().toLocaleTimeString("fr-FR") }, ...h].slice(0, 8));
-    } else {
-      setScoreB((v) => Math.max(0, v + pts));
-      setHistory((h) => [{ label: `${teamB} ${pts > 0 ? "+" : ""}${pts}`, ts: new Date().toLocaleTimeString("fr-FR") }, ...h].slice(0, 8));
+<!-- version 2.0 -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Basket Score Kids</title>
+  <meta name="theme-color" content="#000000" />
+  <style>
+    :root {
+      --bg: #000;
+      --panel: #0c0c0e;
+      --panel2: #111216;
+      --text: #fff;
+      --muted: #a9acb6;
+      --blue: #1e63ff;
+      --blue2: #45a0ff;
+      --red: #ef2b2b;
+      --red2: #ff5f6d;
+      --green: #1ec86b;
+      --gold: #f4b400;
+      --shadow-blue: 0 0 24px rgba(30,99,255,.45);
+      --shadow-red: 0 0 24px rgba(239,43,43,.42);
+      --radius: 28px;
     }
-  }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0; background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100%;
+      overscroll-behavior: none;
+    }
+    body { padding: env(safe-area-inset-top) 12px env(safe-area-inset-bottom) 12px; }
+    .app { max-width: 1500px; margin: 0 auto; }
+    .topbar {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center;
+      background: linear-gradient(180deg, #0f1013, #090a0c);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 30px; padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    .actions, .setup { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .actions { justify-content: flex-start; }
+    .setup { justify-content: flex-end; }
+    .btn {
+      border: 0; border-radius: 22px; padding: 14px 18px; font-weight: 900; font-size: 22px;
+      color: #000; background: #fff; cursor: pointer; min-height: 58px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.25); transition: transform .06s ease, filter .06s ease, opacity .12s ease;
+    }
+    .btn:active { transform: scale(.985); filter: brightness(.98); }
+    .btn.green { background: var(--green); }
+    .btn.orange { background: #ffb020; }
+    .btn.red { background: var(--red); color: #fff; }
+    .btn.blue { background: #4db2ff; }
+    .btn.dark { background: #1c1d22; color: #fff; border: 1px solid rgba(255,255,255,.12); }
+    .btn.full { width: 100%; }
+    .timer-wrap { text-align: center; }
+    .label { color: var(--muted); text-transform: uppercase; letter-spacing: .28em; font-weight: 900; font-size: 14px; }
+    .timer {
+      font-variant-numeric: tabular-nums; font-size: clamp(70px, 12vw, 132px); font-weight: 1000; line-height: .95;
+      text-shadow: 0 0 18px rgba(255,255,255,.09);
+    }
+    .last-action { font-size: clamp(18px, 2.5vw, 26px); color: #d2d4db; font-weight: 800; min-height: 34px; }
+    .time-box {
+      display: flex; align-items: center; gap: 10px; background: var(--panel2); border: 1px solid rgba(255,255,255,.08);
+      padding: 10px 12px; border-radius: 22px; min-height: 58px;
+    }
+    .time-box span { color: var(--muted); font-weight: 800; }
+    .time-box input {
+      width: 72px; background: #000; color: #fff; border: 1px solid rgba(255,255,255,.12); border-radius: 16px;
+      padding: 12px 8px; font-size: 28px; text-align: center; font-weight: 1000;
+    }
+    .board { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    .team {
+      background: radial-gradient(circle at 40% 0%, rgba(255,255,255,.05), transparent 28%), linear-gradient(180deg, #111216, #090a0d 60%);
+      border: 1px solid rgba(255,255,255,.08); border-radius: 32px; padding: 16px; box-shadow: 0 18px 46px rgba(0,0,0,.38);
+    }
+    .team.blue { box-shadow: 0 0 0 1px rgba(30,99,255,.25), var(--shadow-blue); }
+    .team.red { box-shadow: 0 0 0 1px rgba(239,43,43,.22), var(--shadow-red); }
+    .team-head { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+    .logo-btn {
+      width: 118px; height: 118px; border-radius: 28px; background: #050608; border: 1px solid rgba(255,255,255,.1);
+      overflow: hidden; padding: 8px; cursor: pointer;
+    }
+    .team.blue .logo-btn { box-shadow: 0 0 0 2px rgba(46,108,255,.3) inset, 0 0 18px rgba(46,108,255,.26); }
+    .team.red .logo-btn { box-shadow: 0 0 0 2px rgba(239,43,43,.28) inset, 0 0 18px rgba(239,43,43,.24); }
+    .logo-btn svg { width: 100%; height: 100%; display: block; }
+    .team-name {
+      width: 100%; background: #000; color: #fff; border: 1px solid rgba(255,255,255,.12); border-radius: 20px;
+      padding: 17px 16px; font-size: clamp(26px, 4vw, 40px); font-weight: 1000; text-align: center;
+    }
+    .hint { color: var(--muted); font-size: 16px; margin-top: 6px; text-align: center; font-weight: 800; }
+    .team.blue .hint { color: #90b7ff; }
+    .team.red .hint { color: #ffb0b6; }
+    .score {
+      text-align: center; font-size: clamp(160px, 25vw, 340px); line-height: .9; font-weight: 1000; letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums; color: #fff; text-shadow: 0 8px 24px rgba(255,255,255,.05);
+      margin: 12px 0 6px;
+    }
+    .points { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+    .points .big { min-height: 104px; font-size: clamp(54px, 8vw, 90px); }
+    .team.blue .pts { background: linear-gradient(180deg, var(--blue2), var(--blue)); color: #fff; }
+    .team.red .pts { background: linear-gradient(180deg, var(--red2), var(--red)); color: #fff; }
+    .minus { background: #1a1b20; color: #fff; border: 1px solid rgba(255,255,255,.11); }
+    .menu-btn {
+      position: fixed; top: max(14px, env(safe-area-inset-top)); left: 14px; z-index: 30; width: 72px; height: 72px;
+      border-radius: 22px; background: rgba(15,16,20,.82); color: #fff; border: 1px solid rgba(255,255,255,.12);
+      display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(10px);
+      font-size: 32px; font-weight: 1000;
+    }
+    .menu-btn span { display: none; }
+    .modal {
+      position: fixed; inset: 0; z-index: 35; background: rgba(0,0,0,.84); display: none;
+      align-items: center; justify-content: center; padding: 18px;
+    }
+    .modal.show { display: flex; }
+    .modal-card {
+      width: min(1100px, 100%); max-height: 90vh; overflow: auto; background: #0b0c10;
+      border: 1px solid rgba(255,255,255,.09); border-radius: 34px; padding: 20px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+    .modal-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .modal h2 { margin: 0; font-size: clamp(34px, 4vw, 50px); }
+    .grid-help { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; margin-top: 16px; }
+    .help-card {
+      background: linear-gradient(180deg, #121317, #08090c); border: 1px solid rgba(255,255,255,.08); border-radius: 26px; padding: 18px;
+    }
+    .help-card h3 { margin: 0 0 10px; font-size: 28px; }
+    .help-card p, .help-card li { color: #d6d7dc; font-size: 22px; line-height: 1.45; }
+    .help-card ul { margin: 0; padding-left: 1.2em; }
+    .footer-note { margin-top: 16px; color: #ffdc5f; font-size: 20px; font-weight: 900; }
+    .overlay-flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 40; background: #fff; }
+    .overlay-flash.on { animation: flashOnce .18s linear forwards; }
+    .overlay-blink { position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 39; background: #fff; mix-blend-mode: screen; }
+    .overlay-blink.on { animation: blinkBurst .55s ease-out forwards; }
+    @keyframes flashOnce { 0%{opacity:0} 20%{opacity:1} 100%{opacity:0} }
+    @keyframes blinkBurst { 0%,100%{opacity:0} 10%{opacity:.9} 25%{opacity:0} 40%{opacity:.75} 58%{opacity:0} 72%{opacity:.55} 100%{opacity:0} }
+    @media (max-width: 1100px) {
+      .topbar { grid-template-columns: 1fr; }
+      .actions, .setup { justify-content: center; }
+    }
+    @media (max-width: 900px) {
+      .board, .grid-help { grid-template-columns: 1fr; }
+      .logo-btn { width: 100px; height: 100px; }
+      .points .big { min-height: 92px; }
+      .menu-btn { width: 64px; height: 64px; }
+    }
+    @media (max-width: 650px) {
+      body { padding-left: 8px; padding-right: 8px; }
+      .btn { font-size: 18px; padding: 12px 14px; min-height: 52px; }
+      .time-box input { font-size: 24px; width: 64px; }
+      .team-name { padding: 14px 12px; }
+      .help-card p, .help-card li { font-size: 19px; }
+    }
+  </style>
+</head>
+<body>
+  <button id="helpBtn" class="menu-btn" aria-label="Ouvrir l'aide">☰</button>
+  <div id="flash1" class="overlay-flash"></div>
+  <div id="flash2" class="overlay-blink"></div>
 
-  function resetMatch() {
-    setScoreA(0);
-    setScoreB(0);
-    setMinutes(10);
-    setSeconds(0);
-    setRunning(false);
-    setPeriod(1);
-    setHistory([]);
-  }
+  <div class="app">
+    <div class="topbar">
+      <div class="actions">
+        <button id="btnStartPause" class="btn green">Start</button>
+        <button id="btnResetChrono" class="btn orange">Reset chrono</button>
+        <button id="btnResetAll" class="btn red">Reset match</button>
+      </div>
 
-  function adjustTime(delta) {
-    const total = Math.max(0, minutes * 60 + seconds + delta);
-    setMinutes(Math.floor(total / 60));
-    setSeconds(total % 60);
-  }
+      <div class="timer-wrap">
+        <div class="label">Chrono</div>
+        <div id="timer" class="timer">10:00</div>
+        <div id="lastAction" class="last-action">Prêt à jouer</div>
+      </div>
 
-  const ScoreCard = ({ name, setName, score, teamKey, color }) => (
-    <div className={`rounded-3xl shadow-xl p-4 md:p-6 text-white ${color}`}>
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="w-full bg-white/15 rounded-2xl px-4 py-3 text-center text-xl md:text-2xl font-semibold outline-none placeholder-white/70"
-        placeholder="Nom de l'équipe"
-      />
-      <div className="text-center text-7xl md:text-9xl font-black tracking-tight py-6 select-none">{score}</div>
-      <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => addPoints(teamKey, 1)} className="rounded-2xl bg-white text-slate-900 font-bold text-2xl py-4">+1</button>
-        <button onClick={() => addPoints(teamKey, 2)} className="rounded-2xl bg-white text-slate-900 font-bold text-2xl py-4">+2</button>
-        <button onClick={() => addPoints(teamKey, 3)} className="rounded-2xl bg-white text-slate-900 font-bold text-2xl py-4">+3</button>
-        <button onClick={() => addPoints(teamKey, -1)} className="rounded-2xl bg-white/20 border border-white/30 font-bold text-2xl py-4">-1</button>
+      <div class="setup">
+        <div class="time-box"><span>Min</span><input id="setMin" value="10" inputmode="numeric" type="number" min="0" max="99"></div>
+        <div class="time-box"><span>Sec</span><input id="setSec" value="0" inputmode="numeric" type="number" min="0" max="59"></div>
+        <button id="btnApplyTime" class="btn blue">Définir</button>
       </div>
     </div>
-  );
 
-  return (
-    <div className="min-h-screen bg-slate-100 p-3 md:p-6">
-      <div className="max-w-7xl mx-auto grid gap-4">
-        <div className="rounded-3xl bg-white shadow-xl p-4 md:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            <div className="text-center md:text-left">
-              <div className="text-sm uppercase tracking-wide text-slate-500">Période</div>
-              <div className="text-4xl font-black">{period}</div>
-              <div className="mt-2 flex gap-2 justify-center md:justify-start">
-                <button onClick={() => setPeriod((p) => Math.max(1, p - 1))} className="rounded-2xl px-4 py-2 bg-slate-200 font-semibold">-</button>
-                <button onClick={() => setPeriod((p) => p + 1)} className="rounded-2xl px-4 py-2 bg-slate-900 text-white font-semibold">+</button>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <div className="text-sm uppercase tracking-wide text-slate-500">Chrono</div>
-              <div className="text-6xl md:text-7xl font-black tracking-tight">{timeLabel}</div>
-              <div className="flex flex-wrap gap-2 justify-center mt-3">
-                <button onClick={() => setRunning((v) => !v)} className="rounded-2xl px-4 py-3 bg-emerald-600 text-white font-bold min-w-28">{running ? "Pause" : "Démarrer"}</button>
-                <button onClick={() => adjustTime(-60)} className="rounded-2xl px-4 py-3 bg-slate-200 font-semibold">-1 min</button>
-                <button onClick={() => adjustTime(60)} className="rounded-2xl px-4 py-3 bg-slate-200 font-semibold">+1 min</button>
-              </div>
-            </div>
-
-            <div className="text-center md:text-right">
-              <div className="text-sm uppercase tracking-wide text-slate-500">Actions</div>
-              <div className="flex gap-2 justify-center md:justify-end mt-2 flex-wrap">
-                <button onClick={resetMatch} className="rounded-2xl px-4 py-3 bg-red-600 text-white font-bold">Remise à zéro</button>
-                <button onClick={() => document.documentElement.requestFullscreen?.()} className="rounded-2xl px-4 py-3 bg-slate-900 text-white font-bold">Plein écran</button>
-              </div>
-            </div>
+    <div class="board">
+      <section class="team blue">
+        <div class="team-head">
+          <button id="logoBlue" class="logo-btn" title="Changer le logo bleu"></button>
+          <div>
+            <input id="teamA" class="team-name" value="Bleus" aria-label="Nom de l'équipe bleue">
+            <div class="hint">Touchez le logo pour changer d'animal</div>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ScoreCard name={teamA} setName={setTeamA} score={scoreA} teamKey="A" color="bg-blue-600" />
-          <ScoreCard name={teamB} setName={setTeamB} score={scoreB} teamKey="B" color="bg-orange-500" />
+        <div id="scoreA" class="score">0</div>
+        <div class="points">
+          <button class="btn pts big" data-team="A" data-pts="1">+1</button>
+          <button class="btn pts big" data-team="A" data-pts="2">+2</button>
+          <button class="btn pts big" data-team="A" data-pts="3">+3</button>
+          <button class="btn minus big" data-team="A" data-pts="-1">-1</button>
         </div>
+      </section>
 
-        <div className="rounded-3xl bg-white shadow-xl p-4 md:p-6">
-          <div className="text-xl font-bold mb-3">Dernières actions</div>
-          {history.length === 0 ? (
-            <div className="text-slate-500">Aucune action pour le moment.</div>
-          ) : (
-            <div className="grid gap-2">
-              {history.map((item, idx) => (
-                <div key={idx} className="flex justify-between rounded-2xl bg-slate-100 px-4 py-3">
-                  <span className="font-medium">{item.label}</span>
-                  <span className="text-slate-500">{item.ts}</span>
-                </div>
-              ))}
-            </div>
-          )}
+      <section class="team red">
+        <div class="team-head">
+          <button id="logoRed" class="logo-btn" title="Changer le logo rouge"></button>
+          <div>
+            <input id="teamB" class="team-name" value="Rouges" aria-label="Nom de l'équipe rouge">
+            <div class="hint">Touchez le logo pour changer d'animal</div>
+          </div>
+        </div>
+        <div id="scoreB" class="score">0</div>
+        <div class="points">
+          <button class="btn pts big" data-team="B" data-pts="1">+1</button>
+          <button class="btn pts big" data-team="B" data-pts="2">+2</button>
+          <button class="btn pts big" data-team="B" data-pts="3">+3</button>
+          <button class="btn minus big" data-team="B" data-pts="-1">-1</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="helpModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-top">
+        <div>
+          <h2>Comment prendre en main l'app</h2>
+          <div class="last-action">Version enfant — gros boutons, fond noir, lecture super lisible</div>
+        </div>
+        <button id="closeHelp" class="btn dark">Fermer</button>
+      </div>
+
+      <div class="grid-help">
+        <div class="help-card">
+          <h3>1. Changer les logos</h3>
+          <p>Touchez le logo d'une équipe pour faire défiler les 3 animaux disponibles. Les noms des équipes peuvent être modifiés directement.</p>
+        </div>
+        <div class="help-card">
+          <h3>2. Ajouter / corriger les points</h3>
+          <p>Utilisez les grands boutons <strong>+1</strong>, <strong>+2</strong>, <strong>+3</strong>. Le bouton <strong>-1</strong> sert à corriger une erreur.</p>
+          <p>À chaque point ajouté ou retiré, l'écran fait un flash blanc puis un clignotement rapide.</p>
+        </div>
+        <div class="help-card">
+          <h3>3. Régler le chrono et le buzzer</h3>
+          <ul>
+            <li>Entrez les <strong>minutes</strong> et <strong>secondes</strong>.</li>
+            <li>Appuyez sur <strong>Définir</strong> pour appliquer le temps.</li>
+            <li><strong>Start</strong> lance ou met en pause le chrono.</li>
+            <li>À <strong>00:00</strong>, un buzzer sonore retentit automatiquement.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h3>4. Reset</h3>
+          <p><strong>Reset chrono</strong> remet le chrono à la valeur définie.</p>
+          <p><strong>Reset match</strong> remet les scores à zéro et replace le chrono sur la valeur définie.</p>
+        </div>
+        <div class="help-card">
+          <h3>5. Autres fonctionnalités</h3>
+          <ul>
+            <li>Sauvegarde locale automatique des scores, noms, logos et temps.</li>
+            <li>Interface conçue pour être lisible sur iPad au bord du terrain.</li>
+            <li>Le buzzer est joué avec le moteur audio du navigateur. Si le son ne démarre pas, touchez un bouton d'abord et vérifiez que l'iPad n'est pas en silencieux.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h3>6. Astuce iPad</h3>
+          <p>Ouvrez la page dans Safari puis utilisez <strong>Partager → Ajouter à l'écran d'accueil</strong> pour l'utiliser comme une mini app.</p>
         </div>
       </div>
+      <div class="footer-note">Astuce : pour un accès en 1 clic, héberge ce fichier sur GitHub Pages puis ajoute-le à l'écran d'accueil.</div>
     </div>
-  );
-}
+  </div>
+
+  <script>
+    const logosBlue = [
+      `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g"><feGaussianBlur stdDeviation="1.2" /></filter></defs><circle cx="60" cy="60" r="52" fill="#1f6fff"/><circle cx="60" cy="60" r="46" fill="#091323"/><path d="M60 18c20 0 36 15 36 34 0 27-17 50-36 50S24 79 24 52c0-19 16-34 36-34z" fill="#8bc2ff"/><path d="M31 48l-7-19 20 10" fill="#7db7ff"/><path d="M89 48l7-19-20 10" fill="#7db7ff"/><path d="M42 80c7-8 17-12 18-12s11 4 18 12c-12 11-42 11-36 0z" fill="#deefff"/><path d="M49 59l-6 7M71 59l6 7" stroke="#0b1320" stroke-width="4" stroke-linecap="round"/><circle cx="48" cy="55" r="4" fill="#0b1320"/><circle cx="72" cy="55" r="4" fill="#0b1320"/><path d="M55 66h10l-5 5z" fill="#0b1320"/><g filter="url(#g)"><circle cx="60" cy="60" r="53" fill="none" stroke="#4fb4ff" stroke-width="3" opacity=".8"/></g></svg>`,
+      `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="52" fill="#0f5dff"/><circle cx="60" cy="60" r="46" fill="#071120"/><path d="M22 77c0-22 17-40 38-40 21 0 38 18 38 40-14 11-28 17-38 17S36 88 22 77z" fill="#0d3aa8"/><path d="M39 35l-14 2 12-13" fill="#1e74ff"/><path d="M81 35l14 2-12-13" fill="#1e74ff"/><path d="M34 66c9-12 42-12 52 0-6 7-14 13-26 13S40 73 34 66z" fill="#b4d9ff"/><circle cx="45" cy="56" r="4" fill="#08101a"/><circle cx="75" cy="56" r="4" fill="#08101a"/><path d="M54 63h12l-6 6z" fill="#08101a"/><path d="M20 84c10 9 27 16 40 16s30-7 40-16" stroke="#67c3ff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`,
+      `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="52" fill="#1298ff"/><circle cx="60" cy="60" r="46" fill="#08111e"/><path d="M18 72C29 45 59 27 90 36c-5 8-9 13-12 16 7 1 15 6 24 15-16 18-50 24-84 5z" fill="#7fd4ff"/><path d="M33 68c14-3 39-6 52 6-18 9-38 6-52-6z" fill="#0d2c54"/><circle cx="74" cy="49" r="4" fill="#08101a"/><path d="M80 55l12 4-11 7z" fill="#f3b348"/><path d="M28 73c16 14 47 18 69 3" stroke="#4db5ff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`
+    ];
+    const logosRed = [
+      `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="52" fill="#ef2f2f"/><circle cx="60" cy="60" r="46" fill="#22070a"/><path d="M60 22c20 0 34 16 34 36 0 22-15 39-34 39S26 80 26 58c0-20 14-36 34-36z" fill="#ff5c68"/><path d="M44 37l-9-12 15 7" fill="#ff8891"/><path d="M76 37l9-12-15 7" fill="#ff8891"/><circle cx="47" cy="57" r="4" fill="#19090b"/><circle cx="73" cy="57" r="4" fill="#19090b"/><path d="M54 68h12l-6 5z" fill="#19090b"/><path d="M36 80c7-8 17-12 24-12 9 0 17 4 24 12-14 9-34 9-48 0z" fill="#ffd1d4"/></svg>`,
+      `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="52" fill="#ff3f4b"/><circle cx="60" cy="60" r="46" fill="#1d090c"/><path d="M32 82l8-46 20 18 20-18 8 46c-15 11-52 11-56 0z" fill="#ffe0e2"/><path d="M41 42L33 26l14 9" fill="#ff8b97"/><path d="M79 42l8-16-14 9" fill="#ff8b97"/><circle cx="49" cy="57" r="4" fill="#120609"/><circle cx="71" cy="57" r="4" fill="#120609"/><path d="M51 71c5-4 13-4 18 0" stroke="#120609" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`,
+      `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="52" fill="#d82424"/><circle cx="60" cy="60" r="46" fill="#200708"/><path d="M24 72c0-18 16-34 36-34s36 16 36 34c-11 12-23 18-36 18S35 84 24 72z" fill="#ff6a6a"/><path d="M34 44L22 36l16-2" fill="#ff8f8f"/><path d="M86 44l12-8-16-2" fill="#ff8f8f"/><circle cx="46" cy="56" r="4" fill="#120607"/><circle cx="74" cy="56" r="4" fill="#120607"/><path d="M53 65h14l-7 7z" fill="#120607"/><path d="M36 48c6-4 12-6 24-6 13 0 20 2 24 6" stroke="#ffcad0" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`
+    ];
+
+    const els = {
+      scoreA: document.getElementById('scoreA'),
+      scoreB: document.getElementById('scoreB'),
+      timer: document.getElementById('timer'),
+      lastAction: document.getElementById('lastAction'),
+      teamA: document.getElementById('teamA'),
+      teamB: document.getElementById('teamB'),
+      setMin: document.getElementById('setMin'),
+      setSec: document.getElementById('setSec'),
+      logoBlue: document.getElementById('logoBlue'),
+      logoRed: document.getElementById('logoRed'),
+      btnStartPause: document.getElementById('btnStartPause'),
+      btnResetChrono: document.getElementById('btnResetChrono'),
+      btnResetAll: document.getElementById('btnResetAll'),
+      btnApplyTime: document.getElementById('btnApplyTime'),
+      helpBtn: document.getElementById('helpBtn'),
+      helpModal: document.getElementById('helpModal'),
+      closeHelp: document.getElementById('closeHelp'),
+      flash1: document.getElementById('flash1'),
+      flash2: document.getElementById('flash2')
+    };
+
+    const initial = {
+      teamA: 'Bleus', teamB: 'Rouges', scoreA: 0, scoreB: 0,
+      setMin: 10, setSec: 0, remaining: 600, running: false,
+      blueIndex: 0, redIndex: 0
+    };
+
+    let state = loadState();
+    let interval = null;
+    let audioCtx = null;
+    let ended = false;
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('basketKidsScoreState') || 'null');
+        return { ...initial, ...(saved || {}) };
+      } catch { return { ...initial }; }
+    }
+    function saveState() {
+      const payload = { ...state, running: false };
+      localStorage.setItem('basketKidsScoreState', JSON.stringify(payload));
+    }
+    function ensureAudio() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    function playTone(freq, duration, startAt=0) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square'; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime + startAt);
+      gain.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + startAt + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + startAt + duration);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + startAt);
+      osc.stop(audioCtx.currentTime + startAt + duration + 0.03);
+    }
+    function playScoreSound() {
+      ensureAudio();
+      if (!audioCtx) return;
+      playTone(900, 0.08, 0);
+      playTone(1120, 0.08, 0.12);
+    }
+    function playBuzzer() {
+      ensureAudio();
+      if (!audioCtx) return;
+      playTone(740, 0.28, 0);
+      playTone(740, 0.28, 0.32);
+      playTone(510, 0.7, 0.66);
+    }
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+    function fmtTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    }
+    function render() {
+      els.scoreA.textContent = state.scoreA;
+      els.scoreB.textContent = state.scoreB;
+      els.timer.textContent = fmtTime(state.remaining);
+      els.teamA.value = state.teamA;
+      els.teamB.value = state.teamB;
+      els.setMin.value = state.setMin;
+      els.setSec.value = state.setSec;
+      els.logoBlue.innerHTML = logosBlue[state.blueIndex % logosBlue.length];
+      els.logoRed.innerHTML = logosRed[state.redIndex % logosRed.length];
+      els.btnStartPause.textContent = state.running ? 'Pause' : 'Start';
+      saveState();
+    }
+    function setLastAction(txt) { els.lastAction.textContent = txt; }
+    function flashScore() {
+      els.flash1.classList.remove('on'); els.flash2.classList.remove('on');
+      void els.flash1.offsetWidth; void els.flash2.offsetWidth;
+      els.flash1.classList.add('on'); els.flash2.classList.add('on');
+    }
+    function startTimer() {
+      if (interval) clearInterval(interval);
+      interval = setInterval(() => {
+        if (!state.running) return;
+        if (state.remaining <= 0) {
+          state.running = false;
+          render();
+          clearInterval(interval);
+          interval = null;
+          return;
+        }
+        state.remaining -= 1;
+        render();
+        if (state.remaining === 0 && !ended) {
+          ended = true;
+          state.running = false;
+          render();
+          playBuzzer();
+          flashScore();
+          setLastAction('⏰ Fin du chrono');
+          clearInterval(interval);
+          interval = null;
+        }
+      }, 1000);
+    }
+    function applyTime() {
+      const m = clamp(parseInt(els.setMin.value || '0', 10) || 0, 0, 99);
+      const s = clamp(parseInt(els.setSec.value || '0', 10) || 0, 0, 59);
+      state.setMin = m; state.setSec = s; state.remaining = m * 60 + s; state.running = false; ended = false;
+      render();
+      setLastAction('Temps défini à ' + fmtTime(state.remaining));
+    }
+    function resetChrono() {
+      state.running = false;
+      state.remaining = state.setMin * 60 + state.setSec;
+      ended = false;
+      render();
+      setLastAction('Chrono réinitialisé');
+    }
+    function resetMatch() {
+      state.running = false;
+      state.scoreA = 0; state.scoreB = 0; state.remaining = state.setMin * 60 + state.setSec;
+      ended = false;
+      render();
+      setLastAction('Match remis à zéro');
+      flashScore();
+    }
+    function addPoints(team, pts) {
+      ensureAudio();
+      if (team === 'A') state.scoreA = Math.max(0, state.scoreA + pts);
+      else state.scoreB = Math.max(0, state.scoreB + pts);
+      render();
+      flashScore();
+      playScoreSound();
+      setLastAction((team === 'A' ? state.teamA : state.teamB) + ' ' + (pts > 0 ? '+' : '') + pts);
+    }
+
+    document.querySelectorAll('[data-team]').forEach(btn => {
+      btn.addEventListener('click', () => addPoints(btn.dataset.team, parseInt(btn.dataset.pts, 10)));
+    });
+    els.logoBlue.addEventListener('click', () => { state.blueIndex = (state.blueIndex + 1) % logosBlue.length; render(); setLastAction('Logo bleu changé'); });
+    els.logoRed.addEventListener('click', () => { state.redIndex = (state.redIndex + 1) % logosRed.length; render(); setLastAction('Logo rouge changé'); });
+    els.teamA.addEventListener('input', () => { state.teamA = els.teamA.value || 'Bleus'; saveState(); });
+    els.teamB.addEventListener('input', () => { state.teamB = els.teamB.value || 'Rouges'; saveState(); });
+    els.btnApplyTime.addEventListener('click', applyTime);
+    els.btnResetChrono.addEventListener('click', resetChrono);
+    els.btnResetAll.addEventListener('click', resetMatch);
+    els.btnStartPause.addEventListener('click', () => {
+      ensureAudio();
+      if (state.remaining <= 0) state.remaining = state.setMin * 60 + state.setSec;
+      state.running = !state.running;
+      ended = false;
+      render();
+      setLastAction(state.running ? 'Chrono lancé' : 'Chrono en pause');
+      startTimer();
+    });
+    els.helpBtn.addEventListener('click', () => { els.helpModal.classList.add('show'); els.helpModal.setAttribute('aria-hidden', 'false'); });
+    els.closeHelp.addEventListener('click', () => { els.helpModal.classList.remove('show'); els.helpModal.setAttribute('aria-hidden', 'true'); });
+    els.helpModal.addEventListener('click', (e) => { if (e.target === els.helpModal) els.closeHelp.click(); });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') els.closeHelp.click(); });
+    window.addEventListener('beforeunload', saveState);
+
+    render();
+    setLastAction('Prêt à jouer');
+  </script>
+</body>
+</html>
