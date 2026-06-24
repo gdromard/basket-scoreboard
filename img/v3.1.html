@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Basket Score Kids v3.1</title>
+  <meta name="theme-color" content="#000000" />
+  <style>
+    :root {
+      --bg:#050505;
+      --panel:#0b0b0d;
+      --panel-2:#111214;
+      --line:rgba(255,255,255,.09);
+      --line-2:rgba(255,255,255,.15);
+      --text:#ffffff;
+      --muted:#b6b9c0;
+      --blue:#006dff;
+      --blue-2:#2aa7ff;
+      --blue-glow:rgba(0,109,255,.48);
+      --red:#ff2e2e;
+      --red-2:#ff5d5d;
+      --red-glow:rgba(255,46,46,.48);
+      --green:#15e85f;
+      --yellow:#d39f08;
+      --yellow-2:#ffca2b;
+      --grey-btn:#2e3239;
+      --help-blue:#0aa0ff;
+      --help-green:#42d400;
+      --help-yellow:#ffc929;
+      --help-violet:#8f62ff;
+      --radius-xl:30px;
+      --radius-lg:24px;
+      --radius-md:20px;
+      --radius-sm:16px;
+      --shadow-soft:0 18px 40px rgba(0,0,0,.45);
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;padding:0;background:radial-gradient(circle at 50% 0%, #0d0f14 0%, #030303 38%, #000 100%);color:var(--text);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;min-height:100%}
+    body{padding:max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));overflow-x:hidden}
+    button,input{font:inherit}
+    .shell{max-width:1800px;margin:0 auto;position:relative}
+
+    .frame{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:28px;
+      background:linear-gradient(180deg,#07090c,#030303 38%, #060606 100%);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.03), 0 8px 40px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+
+    /* TOP UTILS */
+    .utility-btn{
+      position:absolute;top:16px;z-index:50;width:58px;height:58px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(14,15,18,.88);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.28)
+    }
+    .utility-btn svg{width:30px;height:30px}
+    #btnMenu{left:18px}
+    #btnSound{right:18px}
+    .utility-label{position:absolute;top:74px;font-size:13px;letter-spacing:.08em;font-weight:900;text-transform:uppercase;color:#f1f1f1}
+    #menuLabel{left:18px}
+
+    .main{
+      display:grid;grid-template-columns:minmax(320px,1fr) minmax(280px,.82fr) minmax(320px,1fr);
+      gap:20px;
+      padding:22px 18px 18px;
+      align-items:start;
+    }
+
+    .brand{
+      grid-column:1 / -1;
+      display:flex;justify-content:center;align-items:center;
+      padding-top:0;
+      margin-bottom:-4px;
+    }
+
+    .brand-wrap{display:flex;align-items:center;gap:18px;filter:drop-shadow(0 2px 8px rgba(255,255,255,.1))}
+    .brand-text{line-height:.93;text-align:left}
+    .brand-title{font-family:'Arial Black', Impact, sans-serif;font-size:72px;letter-spacing:.02em;text-transform:uppercase;font-weight:1000;color:#f4f4f4;text-shadow:0 0 12px rgba(255,255,255,.14)}
+    .brand-stars{display:flex;gap:10px;justify-content:center;margin-top:6px}
+    .brand-stars span{color:#ff9a00;font-size:14px;line-height:1}
+    .hoop{width:94px;height:94px}
+
+    .logos-row{display:flex;gap:14px;margin-bottom:14px}
+    .logo-choice{
+      width:126px;height:126px;border-radius:18px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,#0e1118,#050507);display:flex;align-items:center;justify-content:center;padding:8px;cursor:pointer;position:relative;overflow:hidden
+    }
+    .logo-choice img{width:100%;height:100%;object-fit:contain;display:block}
+    .logo-choice.active-blue{box-shadow:0 0 0 2px rgba(66,177,255,.85) inset, 0 0 18px rgba(53,170,255,.5)}
+    .logo-choice.active-red{box-shadow:0 0 0 2px rgba(255,84,84,.85) inset, 0 0 18px rgba(255,84,84,.45)}
+
+    .team-box{
+      border-radius:28px;
+      background:linear-gradient(180deg,#0a0b0f,#040404 28%, #030303 100%);
+      border:1px solid rgba(255,255,255,.08);
+      padding:0 0 14px;
+      overflow:hidden;
+      box-shadow:var(--shadow-soft);
+    }
+    .team-box.blue{box-shadow:0 0 0 1px rgba(0,120,255,.35), 0 0 26px rgba(0,120,255,.26), var(--shadow-soft)}
+    .team-box.red{box-shadow:0 0 0 1px rgba(255,45,45,.35), 0 0 26px rgba(255,45,45,.24), var(--shadow-soft)}
+
+    .team-banner{padding:16px 18px 14px;text-align:center;text-transform:uppercase;font-family:'Arial Black', Impact, sans-serif;font-size:38px;letter-spacing:.03em;color:#fff}
+    .team-banner.blue{background:linear-gradient(180deg,#2b97ff,#006dff)}
+    .team-banner.red{background:linear-gradient(180deg,#ff4747,#ff2121)}
+    .team-name-input{display:block;width:86%;margin:14px auto 0;background:transparent;border:none;color:transparent;position:absolute;pointer-events:none}
+
+    .score-area{padding:10px 18px 0}
+    .score-display{
+      text-align:center;font-family:'Arial Black', Impact, sans-serif;font-size:260px;line-height:.88;letter-spacing:-.05em;color:#f9f9f9;text-shadow:0 0 22px rgba(255,255,255,.08), 0 0 8px rgba(255,255,255,.05);
+      user-select:none;
+    }
+
+    .points-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:6px 18px 0}
+    .points-grid .wide-center{grid-column:2/3}
+    .score-btn{
+      min-height:88px;border:none;border-radius:18px;color:#fff;font-family:'Arial Black', Impact, sans-serif;font-size:56px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2), 0 10px 20px rgba(0,0,0,.32)
+    }
+    .score-btn.blue{background:linear-gradient(180deg,#2a8eff,#005df1)}
+    .score-btn.red{background:linear-gradient(180deg,#ff4d4d,#df1212)}
+    .score-btn.minus{background:linear-gradient(180deg,#18243d,#061747)}
+    .team-box.red .score-btn.minus{background:linear-gradient(180deg,#4a1212,#390505)}
+
+    .bottom-mini-actions{display:flex;justify-content:space-between;gap:14px;padding:18px 18px 0}
+    .mini-control{
+      min-width:200px;display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#121419,#07080c);color:#fff;font-family:'Arial Black', Impact, sans-serif;font-size:22px;text-transform:uppercase;cursor:pointer
+    }
+    .mini-control svg{width:34px;height:34px}
+
+    .center-col{display:flex;flex-direction:column;align-items:center;padding-top:6px}
+    .chrono-label,.section-label{font-family:'Arial Black', Impact, sans-serif;text-transform:uppercase;letter-spacing:.04em;color:#fff;text-align:center}
+    .chrono-label{font-size:28px;margin:12px 0 8px}
+    .chrono-box{
+      width:100%;max-width:350px;border-radius:24px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,#0a0b0f,#020202);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04), 0 8px 24px rgba(0,0,0,.38);padding:16px 14px
+    }
+    .chrono-display{
+      text-align:center;font-family:'Courier New', monospace;font-weight:900;letter-spacing:.04em;font-size:100px;line-height:1;color:#f6f6f6;text-shadow:0 0 12px rgba(255,255,255,.07)
+    }
+    .transport{display:flex;gap:14px;margin:14px 0 22px}
+    .transport-btn{
+      width:108px;height:76px;border-radius:18px;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.28)
+    }
+    .transport-btn svg{width:34px;height:34px}
+    .play-btn{background:linear-gradient(180deg,#143922,#0f2417);color:#20ff72;border-color:rgba(35,255,117,.24)}
+    .pause-btn{background:linear-gradient(180deg,#35383d,#1f2127);color:#fff}
+
+    .section-label{font-size:24px;margin:2px 0 8px}
+    .time-setter{
+      width:100%;max-width:360px;display:grid;grid-template-columns:84px 1fr 84px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,#101216,#0a0b0e);box-shadow:0 8px 18px rgba(0,0,0,.28)
+    }
+    .time-change,.time-value{min-height:74px;display:flex;align-items:center;justify-content:center}
+    .time-change{background:linear-gradient(180deg,#191d23,#0b0c10);font-size:58px;font-weight:900;color:#fff;border:none;cursor:pointer}
+    .time-value{font-family:'Courier New', monospace;font-weight:900;font-size:58px}
+    .time-helper{font-size:18px;color:#e0e0e0;opacity:.9;margin:10px 0 18px}
+
+    .sound-label{font-family:'Arial Black', Impact, sans-serif;font-size:22px;text-transform:uppercase;margin:6px 0 8px}
+    .sound-btn{
+      width:100%;max-width:286px;min-height:84px;border:none;border-radius:20px;background:linear-gradient(180deg,#ff4c4c,#df1111);color:#fff;display:flex;gap:14px;justify-content:center;align-items:center;font-family:'Arial Black', Impact, sans-serif;font-size:22px;text-transform:uppercase;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16), 0 10px 18px rgba(97,0,0,.42)
+    }
+    .sound-btn.is-muted{background:linear-gradient(180deg,#5a5e67,#24272f)}
+    .sound-btn svg{width:32px;height:32px}
+
+    .reset-btn{
+      width:100%;max-width:420px;min-height:104px;margin-top:34px;border:none;border-radius:20px;background:linear-gradient(180deg,#f0bc22,#b67b00);color:#fff;display:flex;align-items:center;justify-content:center;gap:18px;font-family:'Arial Black', Impact, sans-serif;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14), 0 10px 24px rgba(120,76,0,.42)
+    }
+    .reset-title{font-size:62px;line-height:.9}
+    .reset-sub{font-size:24px;line-height:1;text-transform:uppercase}
+    .reset-btn svg{width:52px;height:52px}
+
+    .display-actions{
+      display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;justify-content:center
+    }
+    .display-pill{
+      border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#17191e,#0c0d11);color:#fff;border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:14px
+    }
+    .display-pill svg{width:18px;height:18px}
+
+    .help-sheet{
+      border-top:1px solid rgba(255,255,255,.12);margin-top:2px;background:linear-gradient(180deg,#060709,#020202);overflow:hidden;max-height:0;transition:max-height .35s ease, padding .35s ease; padding:0 10px
+    }
+    .help-sheet.open{max-height:700px;padding:12px 10px 12px}
+    .help-header{display:flex;justify-content:space-between;align-items:center;padding:0 10px 10px}
+    .help-title{font-family:'Arial Black', Impact, sans-serif;font-size:28px;text-transform:uppercase;letter-spacing:.03em}
+    .help-grid{display:grid;grid-template-columns:1.05fr 1.05fr 1.05fr .9fr 1.1fr;gap:12px;padding:0 6px}
+    .help-card{border-radius:22px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,#0e1014,#040505);padding:14px 16px;min-height:290px;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.34)}
+    .help-card h3{margin:0 0 12px;font-family:'Arial Black', Impact, sans-serif;font-size:24px;line-height:1.1;text-transform:uppercase}
+    .help-card p,.help-card li{margin:0 0 10px;font-size:20px;line-height:1.35;color:#f1f1f1}
+    .help-card ul{margin:0;padding-left:18px}
+    .help-blue h3{color:var(--help-blue)}
+    .help-green h3{color:var(--help-green)}
+    .help-yellow h3{color:var(--help-yellow)}
+    .help-violet h3{color:var(--help-violet)}
+
+    .help-logos-row{display:flex;gap:8px;margin:10px 0 6px}
+    .help-logos-row img{width:58px;height:58px;object-fit:contain;border-radius:14px;background:#080a10;border:1px solid rgba(255,255,255,.09);padding:4px}
+    .help-demo-score{display:flex;align-items:center;justify-content:space-between;margin-top:auto;font-family:'Arial Black', Impact, sans-serif;font-size:62px;line-height:1;color:#fff}
+    .help-demo-score .burst{position:relative;color:#ffe155;text-shadow:0 0 10px rgba(255,225,85,.4)}
+
+    .help-footer{display:flex;justify-content:space-between;align-items:center;padding:12px 10px 2px;gap:14px}
+    .tip{font-size:24px;color:#ffd845;font-weight:900}
+    .tip span{color:#fff;font-weight:700}
+    .close-help-btn{border:1px solid rgba(255,193,61,.36);background:linear-gradient(180deg,#3d320b,#1d1506);color:#ffd34e;border-radius:14px;padding:10px 16px;font-family:'Arial Black', Impact, sans-serif;text-transform:uppercase;cursor:pointer;font-size:18px}
+
+    .flash{position:fixed;inset:0;background:#fff;pointer-events:none;opacity:0;z-index:90}
+    .flash.on{animation:flashPoint .5s ease-out}
+    @keyframes flashPoint{
+      0%{opacity:0} 8%{opacity:.95} 20%{opacity:0} 32%{opacity:.64} 45%{opacity:0} 56%{opacity:.42} 100%{opacity:0}
+    }
+
+    body.tv-mode .shell{max-width:none}
+    body.tv-mode .frame{border-radius:0;height:100vh;min-height:100vh}
+    body.tv-mode .main{grid-template-columns:minmax(34%,1fr) minmax(24%,.8fr) minmax(34%,1fr);padding:26px 24px 14px;gap:24px}
+    body.tv-mode .brand-title{font-size:88px}
+    body.tv-mode .score-display{font-size:min(30vw, 420px)}
+    body.tv-mode .score-btn{min-height:110px;font-size:72px}
+    body.tv-mode .logo-choice{width:150px;height:150px}
+    body.tv-mode .team-banner{font-size:50px}
+    body.tv-mode .chrono-display{font-size:124px}
+    body.tv-mode .transport-btn{width:124px;height:90px}
+    body.tv-mode .time-value{font-size:68px}.time-change{font-size:62px}
+    body.tv-mode .sound-btn{min-height:94px;font-size:28px}
+    body.tv-mode .reset-title{font-size:78px}.reset-sub{font-size:26px}
+    body.tv-mode .help-card{min-height:340px}
+    body.tv-mode .help-card p,body.tv-mode .help-card li{font-size:24px}
+
+    @media (max-width: 1500px){
+      .brand-title{font-size:60px}
+      .score-display{font-size:220px}
+      .help-grid{grid-template-columns:repeat(3,1fr)}
+    }
+    @media (max-width: 1200px){
+      .main{grid-template-columns:1fr;gap:14px}
+      .center-col{order:2}
+      .main > .left-col{order:1}
+      .main > .right-col{order:3}
+      .logos-row{justify-content:center}
+      .help-grid{grid-template-columns:repeat(2,1fr)}
+      .utility-label{display:none}
+      .brand-title{font-size:54px}
+      .brand{padding-top:12px}
+    }
+    @media (max-width: 760px){
+      .logo-choice{width:90px;height:90px}
+      .team-banner{font-size:28px}
+      .score-display{font-size:150px}
+      .score-btn{min-height:74px;font-size:42px}
+      .chrono-display{font-size:72px}
+      .transport-btn{width:90px;height:68px}
+      .time-setter{grid-template-columns:70px 1fr 70px}
+      .time-change,.time-value{min-height:64px;font-size:44px}
+      .sound-btn{max-width:250px;min-height:74px;font-size:18px}
+      .reset-btn{min-height:88px}.reset-title{font-size:46px}.reset-sub{font-size:18px}
+      .help-grid{grid-template-columns:1fr}
+      .help-card{min-height:auto}
+      .help-card p,.help-card li{font-size:17px}
+      .help-title{font-size:20px}
+      .tip{font-size:16px}
+      .close-help-btn{font-size:14px}
+      .utility-btn{width:50px;height:50px}
+      #btnMenu{left:12px} #btnSound{right:12px}
+      .brand-title{font-size:42px}
+      .brand-wrap{gap:12px}
+      .hoop{width:68px;height:68px}
+      .main{padding:18px 10px 12px}
+      .bottom-mini-actions{flex-direction:column}
+      .mini-control{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="flash" id="flash"></div>
+
+  <div class="shell">
+    <button class="utility-btn" id="btnMenu" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+    </button>
+    <div class="utility-label" id="menuLabel">MENU</div>
+
+    <button class="utility-btn" id="btnSound" aria-label="Son activé ou coupé">
+      <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5 6 9H3v6h3l5 4V5Z"></path>
+        <path data-wave="1" d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+        <path data-wave="2" d="M18.5 6a8.5 8.5 0 0 1 0 12"></path>
+      </svg>
+    </button>
+
+    <div class="frame">
+      <div class="main">
+        <div class="brand">
+          <div class="brand-wrap">
+            <svg class="hoop" viewBox="0 0 120 120" aria-hidden="true">
+              <g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M28 20h46v39H28z" opacity=".96"/>
+                <path d="M51 59h29"/>
+                <path d="M54 59 46 78m9-19 7 20m8-20-9 20m17-20-8 19" opacity=".9"/>
+                <path d="M44 79c6 8 12 14 17 19 5-5 11-11 17-19" opacity=".92"/>
+              </g>
+            </svg>
+            <div class="brand-text">
+              <div class="brand-title">Basket<br>Score</div>
+              <div class="brand-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+            </div>
+          </div>
+        </div>
+
+        <section class="left-col">
+          <div class="logos-row" id="blueLogos"></div>
+          <div class="team-box blue">
+            <div class="team-banner blue" id="blueTeamNameLabel">Équipe Bleue</div>
+            <input class="team-name-input" id="blueTeamName" value="Équipe Bleue" />
+            <div class="score-area">
+              <div class="score-display" id="scoreBlue">0</div>
+            </div>
+            <div class="points-grid">
+              <button class="score-btn blue" data-team="blue" data-points="1">+1</button>
+              <button class="score-btn blue" data-team="blue" data-points="2">+2</button>
+              <button class="score-btn blue" data-team="blue" data-points="3">+3</button>
+              <button class="score-btn minus wide-center" data-team="blue" data-points="-1">-1</button>
+            </div>
+            <div class="bottom-mini-actions">
+              <button class="mini-control" id="btnCycleBlue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.4"/><path d="M3 12A9 9 0 0 1 18.5 5.6"/><path d="M8 19H5v-3"/><path d="M16 5h3v3"/></svg>
+                <span>Changer<br>les logos</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="center-col">
+          <div class="chrono-label">Chrono</div>
+          <div class="chrono-box">
+            <div class="chrono-display" id="chrono">05:00</div>
+          </div>
+
+          <div class="transport">
+            <button class="transport-btn play-btn" id="btnPlay" aria-label="Démarrer">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <button class="transport-btn pause-btn" id="btnPause" aria-label="Pause">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zm6 0h4v14h-4z"/></svg>
+            </button>
+          </div>
+
+          <div class="section-label">Temps du chrono</div>
+          <div class="time-setter">
+            <button class="time-change" id="btnTimeMinus">−</button>
+            <div class="time-value" id="timePreset">05:00</div>
+            <button class="time-change" id="btnTimePlus">+</button>
+          </div>
+          <div class="time-helper">De 30 sec à 20 min</div>
+
+          <div class="sound-label">Buzzer</div>
+          <button class="sound-btn" id="btnMuteToggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 5 6 9H3v6h3l5 4V5Z"></path>
+              <path id="soundBtnWave1" d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+              <path id="soundBtnWave2" d="M18.5 6a8.5 8.5 0 0 1 0 12"></path>
+            </svg>
+            <span id="muteText">Activé</span>
+          </button>
+
+          <button class="reset-btn" id="btnResetAll">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 0 15.5 6.4"/><path d="M21 12A9 9 0 0 0 5.5 5.6"/><path d="M8 19H3v-5"/><path d="M16 5h5v5"/></svg>
+            <div>
+              <div class="reset-title">RESET</div>
+              <div class="reset-sub">Tout remettre à zéro</div>
+            </div>
+          </button>
+
+          <div class="display-actions">
+            <button class="display-pill" id="btnTvMode">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/></svg>
+              <span id="tvText">Mode TV</span>
+            </button>
+            <button class="display-pill" id="btnFullscreen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3H3v5"/><path d="M16 3h5v5"/><path d="M21 16v5h-5"/><path d="M3 16v5h5"/></svg>
+              <span id="fullscreenText">Plein écran</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="right-col">
+          <div class="logos-row" id="redLogos"></div>
+          <div class="team-box red">
+            <div class="team-banner red" id="redTeamNameLabel">Équipe Rouge</div>
+            <input class="team-name-input" id="redTeamName" value="Équipe Rouge" />
+            <div class="score-area">
+              <div class="score-display" id="scoreRed">0</div>
+            </div>
+            <div class="points-grid">
+              <button class="score-btn red" data-team="red" data-points="1">+1</button>
+              <button class="score-btn red" data-team="red" data-points="2">+2</button>
+              <button class="score-btn red" data-team="red" data-points="3">+3</button>
+              <button class="score-btn minus wide-center" data-team="red" data-points="-1">-1</button>
+            </div>
+            <div class="bottom-mini-actions">
+              <div style="flex:1"></div>
+              <button class="mini-control" id="btnNewMatch">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10l-1 5H8L7 4Z"/><path d="M6 9h12c0 3.5-2.7 6-6 6s-6-2.5-6-6Z"/></svg>
+                <span>Nouveau<br>match</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="help-sheet" id="helpSheet">
+        <div class="help-header">
+          <div class="help-title">Comment utiliser l'app — v3.1</div>
+        </div>
+        <div class="help-grid">
+          <article class="help-card help-blue">
+            <h3>1. Changer les logos</h3>
+            <p>Clique sur un logo pour le sélectionner.</p>
+            <div class="help-logos-row">
+              <img src="img/bleulogo1.png" alt="Logo bleu 1">
+              <img src="img/bleulogo2.png" alt="Logo bleu 2">
+              <img src="img/bleulogo3.png" alt="Logo bleu 3">
+            </div>
+            <div class="help-logos-row">
+              <img src="img/redlogo1.png" alt="Logo rouge 1">
+              <img src="img/redlogo2.png" alt="Logo rouge 2">
+              <img src="img/redlogo3.png" alt="Logo rouge 3">
+            </div>
+            <p>Le logo sélectionné est entouré.</p>
+          </article>
+
+          <article class="help-card help-blue">
+            <h3>2. Ajouter / retirer des points</h3>
+            <p>Utilise <strong>+1</strong>, <strong>+2</strong> ou <strong>+3</strong> pour ajouter des points.</p>
+            <p>Utilise <strong>-1</strong> pour enlever un point.</p>
+            <p>L'écran clignote à chaque point marqué.</p>
+            <div class="help-demo-score"><span>12</span><span>→</span><span class="burst">12</span></div>
+          </article>
+
+          <article class="help-card help-green">
+            <h3>3. Chrono &amp; buzzer</h3>
+            <ul>
+              <li>Appuie sur <strong>▶</strong> pour démarrer.</li>
+              <li>Appuie sur <strong>❚❚</strong> pour mettre en pause.</li>
+              <li>Pour changer le temps, utilise <strong>−</strong> ou <strong>+</strong>.</li>
+              <li>Le bouton rouge contrôle l'état du son : <strong>Activé / Muet</strong>.</li>
+            </ul>
+            <div class="time-setter" style="margin-top:auto;max-width:none;grid-template-columns:68px 1fr 68px"><div class="time-change">−</div><div class="time-value" style="font-size:44px">05:00</div><div class="time-change">+</div></div>
+          </article>
+
+          <article class="help-card help-yellow">
+            <h3>4. Reset</h3>
+            <p>Appuie sur <strong>RESET</strong> pour tout remettre à zéro.</p>
+            <p><strong>NOUVEAU MATCH</strong> remet seulement le score et le chrono, en gardant les noms et les logos.</p>
+            <div class="help-demo-score" style="font-size:52px"><span>0</span><span>→</span><span>0</span></div>
+            <div class="time-value" style="font-size:40px;justify-content:flex-start;margin-top:6px">05:00</div>
+          </article>
+
+          <article class="help-card help-violet">
+            <h3>Fonctionnalités</h3>
+            <ul>
+              <li>Effet lumineux à chaque point</li>
+              <li>Buzzer à la fin du chrono</li>
+              <li>Temps réglable de 30 sec à 20 min</li>
+              <li>Interface adaptée aux enfants</li>
+              <li>Mode TV &amp; plein écran</li>
+              <li>Sauvegarde locale automatique</li>
+            </ul>
+          </article>
+        </div>
+        <div class="help-footer">
+          <div class="tip">★ <span>Astuce :</span> Ajoute l'app à ton écran d'accueil pour y accéder en 1 clic !</div>
+          <button class="close-help-btn" id="btnCloseHelp">Fermer ✕</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'basket-scoreboard-v3.1';
+  const PRESET_MIN = 30;      // seconds
+  const PRESET_MAX = 20 * 60; // 20 min
+  const PRESET_STEP = 30;     // 30 sec
+
+  const blueAssets = ['img/bleulogo1.png','img/bleulogo2.png','img/bleulogo3.png'];
+  const redAssets  = ['img/redlogo1.png','img/redlogo2.png','img/redlogo3.png'];
+
+  const defaultState = {
+    version: 'v3.1',
+    blueName: 'Équipe Bleue',
+    redName: 'Équipe Rouge',
+    blueScore: 12,
+    redScore: 8,
+    blueLogo: 0,
+    redLogo: 0,
+    presetSeconds: 5 * 60,
+    remainingSeconds: 5 * 60,
+    running: false,
+    soundEnabled: true,
+    helpOpen: false,
+    tvMode: false
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    scoreBlue: $('scoreBlue'), scoreRed: $('scoreRed'), chrono: $('chrono'), timePreset: $('timePreset'),
+    blueTeamNameLabel: $('blueTeamNameLabel'), redTeamNameLabel: $('redTeamNameLabel'),
+    blueLogos: $('blueLogos'), redLogos: $('redLogos'),
+    btnCycleBlue: $('btnCycleBlue'), btnPlay: $('btnPlay'), btnPause: $('btnPause'), btnTimeMinus: $('btnTimeMinus'), btnTimePlus: $('btnTimePlus'),
+    btnMuteToggle: $('btnMuteToggle'), btnResetAll: $('btnResetAll'), btnNewMatch: $('btnNewMatch'),
+    btnMenu: $('btnMenu'), btnCloseHelp: $('btnCloseHelp'), helpSheet: $('helpSheet'), flash: $('flash'),
+    btnSound: $('btnSound'), soundIcon: $('soundIcon'), muteText: $('muteText'),
+    btnTvMode: $('btnTvMode'), btnFullscreen: $('btnFullscreen'), tvText: $('tvText'), fullscreenText: $('fullscreenText'),
+    soundBtnWave1: $('soundBtnWave1'), soundBtnWave2: $('soundBtnWave2')
+  };
+
+  let state = loadState();
+  let interval = null;
+  let endTimestamp = null;
+  let audioCtx = null;
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return structuredClone(defaultState);
+      return { ...structuredClone(defaultState), ...JSON.parse(raw), running: false };
+    } catch {
+      return structuredClone(defaultState);
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, running: false }));
+  }
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function playTone(freq, duration, startAt = 0, volume = 0.2) {
+    if (!audioCtx || !state.soundEnabled) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime + startAt);
+    gain.gain.exponentialRampToValueAtTime(volume, audioCtx.currentTime + startAt + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + startAt + duration);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + startAt);
+    osc.stop(audioCtx.currentTime + startAt + duration + 0.03);
+  }
+
+  function playPointSound() {
+    ensureAudio();
+    if (!state.soundEnabled) return;
+    playTone(880, 0.08, 0, 0.12);
+    playTone(1120, 0.08, 0.1, 0.10);
+  }
+
+  function playBuzzer(auto = false) {
+    ensureAudio();
+    if (!state.soundEnabled) return;
+    playTone(760, 0.24, 0, 0.18);
+    playTone(760, 0.24, 0.28, 0.18);
+    playTone(520, 0.62, 0.58, auto ? 0.28 : 0.20);
+  }
+
+  function fmt(seconds) {
+    const mm = Math.floor(seconds / 60);
+    const ss = seconds % 60;
+    return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+  }
+
+  function clampPreset(v) {
+    return Math.max(PRESET_MIN, Math.min(PRESET_MAX, v));
+  }
+
+  function flashPoint() {
+    el.flash.classList.remove('on');
+    void el.flash.offsetWidth;
+    el.flash.classList.add('on');
+  }
+
+  function setSoundUi() {
+    const muted = !state.soundEnabled;
+    el.btnMuteToggle.classList.toggle('is-muted', muted);
+    el.muteText.textContent = muted ? 'Muet' : 'Activé';
+    [...el.soundIcon.querySelectorAll('[data-wave]')].forEach(w => w.style.display = muted ? 'none' : 'block');
+    el.soundBtnWave1.style.display = muted ? 'none' : 'block';
+    el.soundBtnWave2.style.display = muted ? 'none' : 'block';
+    if (muted) {
+      if (!el.soundIcon.querySelector('.mute-cross')) {
+        const ns='http://www.w3.org/2000/svg';
+        const p1=document.createElementNS(ns,'path'); p1.setAttribute('class','mute-cross'); p1.setAttribute('d','M16 9l5 6'); p1.setAttribute('stroke','currentColor'); p1.setAttribute('stroke-width','2.2'); p1.setAttribute('stroke-linecap','round');
+        const p2=document.createElementNS(ns,'path'); p2.setAttribute('class','mute-cross'); p2.setAttribute('d','M21 9l-5 6'); p2.setAttribute('stroke','currentColor'); p2.setAttribute('stroke-width','2.2'); p2.setAttribute('stroke-linecap','round');
+        el.soundIcon.appendChild(p1); el.soundIcon.appendChild(p2);
+      }
+    } else {
+      el.soundIcon.querySelectorAll('.mute-cross').forEach(n => n.remove());
+    }
+  }
+
+  function renderLogos(container, assets, activeIndex, cls) {
+    container.innerHTML = '';
+    assets.forEach((src, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'logo-choice' + (idx === activeIndex ? ' ' + cls : '');
+      btn.innerHTML = `<img src="${src}" alt="logo ${idx + 1}">`;
+      btn.addEventListener('click', () => {
+        if (assets === blueAssets) state.blueLogo = idx; else state.redLogo = idx;
+        render();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function updateFullscreenLabel() {
+    el.fullscreenText.textContent = document.fullscreenElement ? 'Quitter' : 'Plein écran';
+  }
+
+  function render() {
+    document.body.classList.toggle('tv-mode', !!state.tvMode);
+    el.scoreBlue.textContent = state.blueScore;
+    el.scoreRed.textContent = state.redScore;
+    el.chrono.textContent = fmt(state.remainingSeconds);
+    el.timePreset.textContent = fmt(state.presetSeconds);
+    el.blueTeamNameLabel.textContent = state.blueName.toUpperCase();
+    el.redTeamNameLabel.textContent = state.redName.toUpperCase();
+    renderLogos(el.blueLogos, blueAssets, state.blueLogo, 'active-blue');
+    renderLogos(el.redLogos, redAssets, state.redLogo, 'active-red');
+    setSoundUi();
+    el.helpSheet.classList.toggle('open', !!state.helpOpen);
+    el.tvText.textContent = state.tvMode ? 'Mode normal' : 'Mode TV';
+    updateFullscreenLabel();
+    saveState();
+  }
+
+  function setScore(team, delta) {
+    if (team === 'blue') state.blueScore = Math.max(0, state.blueScore + delta);
+    if (team === 'red') state.redScore = Math.max(0, state.redScore + delta);
+    flashPoint();
+    playPointSound();
+    render();
+  }
+
+  function stopTimer() {
+    if (interval) clearInterval(interval);
+    interval = null;
+    endTimestamp = null;
+    state.running = false;
+    render();
+  }
+
+  function updateTimerFromEnd() {
+    if (!endTimestamp) return;
+    const ms = Math.max(0, endTimestamp - Date.now());
+    state.remainingSeconds = Math.ceil(ms / 1000);
+    if (state.remainingSeconds <= 0) {
+      state.remainingSeconds = 0;
+      stopTimer();
+      flashPoint();
+      playBuzzer(true);
+    } else {
+      render();
+    }
+  }
+
+  function startTimer() {
+    ensureAudio();
+    if (state.remainingSeconds <= 0) state.remainingSeconds = state.presetSeconds;
+    state.running = true;
+    endTimestamp = Date.now() + state.remainingSeconds * 1000;
+    if (interval) clearInterval(interval);
+    interval = setInterval(updateTimerFromEnd, 250);
+    render();
+  }
+
+  function pauseTimer() {
+    if (!state.running) return;
+    updateTimerFromEnd();
+    stopTimer();
+  }
+
+  function changePreset(delta) {
+    const candidate = clampPreset(state.presetSeconds + delta);
+    state.presetSeconds = candidate;
+    if (!state.running) state.remainingSeconds = candidate;
+    render();
+  }
+
+  function newMatch() {
+    stopTimer();
+    state.blueScore = 0;
+    state.redScore = 0;
+    state.remainingSeconds = state.presetSeconds;
+    render();
+  }
+
+  function resetAll() {
+    stopTimer();
+    state = structuredClone(defaultState);
+    render();
+  }
+
+  function toggleSound() {
+    state.soundEnabled = !state.soundEnabled;
+    render();
+  }
+
+  function toggleHelp() {
+    state.helpOpen = !state.helpOpen;
+    render();
+  }
+
+  function cycleBlueLogo() {
+    state.blueLogo = (state.blueLogo + 1) % blueAssets.length;
+    render();
+  }
+
+  async function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen?.();
+    } catch (e) {}
+    updateFullscreenLabel();
+  }
+
+  function toggleTvMode() {
+    state.tvMode = !state.tvMode;
+    render();
+  }
+
+  // Events
+  document.querySelectorAll('[data-team][data-points]').forEach(btn => btn.addEventListener('click', () => setScore(btn.dataset.team, parseInt(btn.dataset.points,10))));
+  el.btnPlay.addEventListener('click', () => startTimer());
+  el.btnPause.addEventListener('click', () => pauseTimer());
+  el.btnTimeMinus.addEventListener('click', () => changePreset(-PRESET_STEP));
+  el.btnTimePlus.addEventListener('click', () => changePreset(PRESET_STEP));
+  el.btnMuteToggle.addEventListener('click', toggleSound);
+  el.btnSound.addEventListener('click', toggleSound);
+  el.btnResetAll.addEventListener('click', resetAll);
+  el.btnNewMatch.addEventListener('click', newMatch);
+  el.btnMenu.addEventListener('click', toggleHelp);
+  el.btnCloseHelp.addEventListener('click', () => { state.helpOpen = false; render(); });
+  el.btnCycleBlue.addEventListener('click', cycleBlueLogo);
+  el.btnTvMode.addEventListener('click', toggleTvMode);
+  el.btnFullscreen.addEventListener('click', toggleFullscreen);
+
+  document.addEventListener('fullscreenchange', updateFullscreenLabel);
+  window.addEventListener('beforeunload', saveState);
+  window.addEventListener('keydown', (e) => {
+    if (e.key === ' ') { e.preventDefault(); state.running ? pauseTimer() : startTimer(); }
+    if (e.key.toLowerCase() === 'f') toggleFullscreen();
+    if (e.key.toLowerCase() === 'm') toggleSound();
+    if (e.key.toLowerCase() === 't') toggleTvMode();
+    if (e.key === 'Escape' && state.helpOpen) { state.helpOpen = false; render(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
