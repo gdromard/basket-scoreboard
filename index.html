@@ -1,0 +1,138 @@
+
+export default function BasketScoreboard() {
+  const { useEffect, useMemo, useState } = React;
+
+  const [teamA, setTeamA] = useState("Équipe A");
+  const [teamB, setTeamB] = useState("Équipe B");
+  const [scoreA, setScoreA] = useState(0);
+  const [scoreB, setScoreB] = useState(0);
+  const [minutes, setMinutes] = useState(10);
+  const [seconds, setSeconds] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [period, setPeriod] = useState(1);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    if (!running) return;
+    const timer = setInterval(() => {
+      if (minutes === 0 && seconds === 0) {
+        setRunning(false);
+        return;
+      }
+      if (seconds === 0) {
+        setMinutes((m) => Math.max(0, m - 1));
+        setSeconds(59);
+      } else {
+        setSeconds((s) => s - 1);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [running, minutes, seconds]);
+
+  const timeLabel = useMemo(
+    () => `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
+    [minutes, seconds]
+  );
+
+  function addPoints(team, pts) {
+    if (team === "A") {
+      setScoreA((v) => Math.max(0, v + pts));
+      setHistory((h) => [{ label: `${teamA} ${pts > 0 ? "+" : ""}${pts}`, ts: new Date().toLocaleTimeString("fr-FR") }, ...h].slice(0, 8));
+    } else {
+      setScoreB((v) => Math.max(0, v + pts));
+      setHistory((h) => [{ label: `${teamB} ${pts > 0 ? "+" : ""}${pts}`, ts: new Date().toLocaleTimeString("fr-FR") }, ...h].slice(0, 8));
+    }
+  }
+
+  function resetMatch() {
+    setScoreA(0);
+    setScoreB(0);
+    setMinutes(10);
+    setSeconds(0);
+    setRunning(false);
+    setPeriod(1);
+    setHistory([]);
+  }
+
+  function adjustTime(delta) {
+    const total = Math.max(0, minutes * 60 + seconds + delta);
+    setMinutes(Math.floor(total / 60));
+    setSeconds(total % 60);
+  }
+
+  const ScoreCard = ({ name, setName, score, teamKey, color }) => (
+    <div className={`rounded-3xl shadow-xl p-4 md:p-6 text-white ${color}`}>
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full bg-white/15 rounded-2xl px-4 py-3 text-center text-xl md:text-2xl font-semibold outline-none placeholder-white/70"
+        placeholder="Nom de l'équipe"
+      />
+      <div className="text-center text-7xl md:text-9xl font-black tracking-tight py-6 select-none">{score}</div>
+      <div className="grid grid-cols-2 gap-3">
+        <button onClick={() => addPoints(teamKey, 1)} className="rounded-2xl bg-white text-slate-900 font-bold text-2xl py-4">+1</button>
+        <button onClick={() => addPoints(teamKey, 2)} className="rounded-2xl bg-white text-slate-900 font-bold text-2xl py-4">+2</button>
+        <button onClick={() => addPoints(teamKey, 3)} className="rounded-2xl bg-white text-slate-900 font-bold text-2xl py-4">+3</button>
+        <button onClick={() => addPoints(teamKey, -1)} className="rounded-2xl bg-white/20 border border-white/30 font-bold text-2xl py-4">-1</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-100 p-3 md:p-6">
+      <div className="max-w-7xl mx-auto grid gap-4">
+        <div className="rounded-3xl bg-white shadow-xl p-4 md:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <div className="text-center md:text-left">
+              <div className="text-sm uppercase tracking-wide text-slate-500">Période</div>
+              <div className="text-4xl font-black">{period}</div>
+              <div className="mt-2 flex gap-2 justify-center md:justify-start">
+                <button onClick={() => setPeriod((p) => Math.max(1, p - 1))} className="rounded-2xl px-4 py-2 bg-slate-200 font-semibold">-</button>
+                <button onClick={() => setPeriod((p) => p + 1)} className="rounded-2xl px-4 py-2 bg-slate-900 text-white font-semibold">+</button>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-wide text-slate-500">Chrono</div>
+              <div className="text-6xl md:text-7xl font-black tracking-tight">{timeLabel}</div>
+              <div className="flex flex-wrap gap-2 justify-center mt-3">
+                <button onClick={() => setRunning((v) => !v)} className="rounded-2xl px-4 py-3 bg-emerald-600 text-white font-bold min-w-28">{running ? "Pause" : "Démarrer"}</button>
+                <button onClick={() => adjustTime(-60)} className="rounded-2xl px-4 py-3 bg-slate-200 font-semibold">-1 min</button>
+                <button onClick={() => adjustTime(60)} className="rounded-2xl px-4 py-3 bg-slate-200 font-semibold">+1 min</button>
+              </div>
+            </div>
+
+            <div className="text-center md:text-right">
+              <div className="text-sm uppercase tracking-wide text-slate-500">Actions</div>
+              <div className="flex gap-2 justify-center md:justify-end mt-2 flex-wrap">
+                <button onClick={resetMatch} className="rounded-2xl px-4 py-3 bg-red-600 text-white font-bold">Remise à zéro</button>
+                <button onClick={() => document.documentElement.requestFullscreen?.()} className="rounded-2xl px-4 py-3 bg-slate-900 text-white font-bold">Plein écran</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <ScoreCard name={teamA} setName={setTeamA} score={scoreA} teamKey="A" color="bg-blue-600" />
+          <ScoreCard name={teamB} setName={setTeamB} score={scoreB} teamKey="B" color="bg-orange-500" />
+        </div>
+
+        <div className="rounded-3xl bg-white shadow-xl p-4 md:p-6">
+          <div className="text-xl font-bold mb-3">Dernières actions</div>
+          {history.length === 0 ? (
+            <div className="text-slate-500">Aucune action pour le moment.</div>
+          ) : (
+            <div className="grid gap-2">
+              {history.map((item, idx) => (
+                <div key={idx} className="flex justify-between rounded-2xl bg-slate-100 px-4 py-3">
+                  <span className="font-medium">{item.label}</span>
+                  <span className="text-slate-500">{item.ts}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
