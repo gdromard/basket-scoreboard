@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Basket Scoreboard v3.2</title>
+  <meta name="theme-color" content="#000000" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Orbitron:wght@700;800;900&family=Material+Symbols+Rounded:FILL@0..1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#040404;
+      --panel:#0a0a0c;
+      --panel-2:#111214;
+      --line:rgba(255,255,255,.12);
+      --line-strong:rgba(255,255,255,.24);
+      --text:#ffffff;
+      --muted:#bfc4cc;
+      --blue:#0b73ff;
+      --blue-2:#39a5ff;
+      --blue-glow:rgba(11,115,255,.55);
+      --red:#ff2e2e;
+      --red-2:#ff6161;
+      --red-glow:rgba(255,46,46,.5);
+      --green:#18eb63;
+      --gold:#c28b00;
+      --gold-2:#efbf2e;
+      --grey-btn:#35393f;
+      --help-blue:#0aa0ff;
+      --help-green:#42d400;
+      --help-yellow:#ffc929;
+      --help-violet:#8f62ff;
+      --radius-xl:30px;
+      --radius-lg:22px;
+      --radius-md:18px;
+      --shadow-soft:0 18px 40px rgba(0,0,0,.45);
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;padding:0;background:radial-gradient(circle at 50% 0%, #10141b 0%, #030303 35%, #000 100%);color:var(--text);font-family:'Bebas Neue', Impact, sans-serif;min-height:100%}
+    body{padding:max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));overflow-x:hidden;letter-spacing:.02em}
+    button,input{font:inherit}
+    .shell{max-width:1800px;margin:0 auto;position:relative}
+
+    .material-symbols-rounded{
+      font-family:'Material Symbols Rounded';
+      font-weight:normal;
+      font-style:normal;
+      font-size:24px;
+      line-height:1;
+      letter-spacing:normal;
+      text-transform:none;
+      display:inline-block;
+      white-space:nowrap;
+      word-wrap:normal;
+      direction:ltr;
+      -webkit-font-feature-settings:'liga';
+      -webkit-font-smoothing:antialiased;
+      font-variation-settings:'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .frame{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:28px;
+      background:linear-gradient(180deg,#07090c,#030303 38%, #060606 100%);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.03), 0 8px 40px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+
+    .utility-btn{
+      position:absolute;top:16px;z-index:50;width:58px;height:58px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(14,15,18,.88);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.28)
+    }
+    .utility-btn .material-symbols-rounded{font-size:30px}
+    #btnMenu{left:18px}
+    #btnSound{right:18px}
+    .utility-label{position:absolute;top:74px;font-size:13px;letter-spacing:.08em;font-weight:900;text-transform:uppercase;color:#f1f1f1}
+    #menuLabel{left:18px}
+
+    .main{
+      display:grid;grid-template-columns:minmax(320px,1fr) minmax(270px,.82fr) minmax(320px,1fr);
+      gap:20px;
+      padding:22px 18px 18px;
+      align-items:start;
+    }
+
+    .brand{grid-column:1 / -1;display:flex;justify-content:center;align-items:center;margin-bottom:-4px}
+    .brand-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+    .brand-img{display:block;max-width:min(420px,58vw);width:100%;height:auto;filter:drop-shadow(0 2px 8px rgba(255,255,255,.1))}
+    .brand-stars{display:flex;gap:10px;justify-content:center}
+    .brand-stars span{color:#ff9a00;font-size:14px;line-height:1;display:inline-flex;transform-origin:center center}
+    .brand-stars span:nth-child(3){transform:scale(1.2)}
+
+    .logos-row{display:flex;gap:14px;margin-bottom:14px}
+    .logo-choice{
+      width:126px;height:126px;border-radius:18px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,#0e1118,#050507);display:flex;align-items:center;justify-content:center;padding:8px;cursor:pointer;position:relative;overflow:hidden
+    }
+    .logo-choice img{width:100%;height:100%;object-fit:contain;display:block}
+    .logo-choice.active-blue{box-shadow:0 0 0 2px rgba(66,177,255,.85) inset, 0 0 18px rgba(53,170,255,.5)}
+    .logo-choice.active-red{box-shadow:0 0 0 2px rgba(255,84,84,.85) inset, 0 0 18px rgba(255,84,84,.45)}
+
+    .team-box{
+      border-radius:28px;
+      background:linear-gradient(180deg,#0a0b0f,#040404 28%, #030303 100%);
+      border:1px solid rgba(255,255,255,.08);
+      padding:0 0 14px;
+      overflow:hidden;
+      box-shadow:var(--shadow-soft);
+    }
+    .team-box.blue{box-shadow:0 0 0 1px rgba(0,120,255,.35), 0 0 26px rgba(0,120,255,.26), var(--shadow-soft)}
+    .team-box.red{box-shadow:0 0 0 1px rgba(255,45,45,.35), 0 0 26px rgba(255,45,45,.24), var(--shadow-soft)}
+
+    .team-banner{padding:16px 18px 14px;text-align:center;text-transform:uppercase;font-size:38px;letter-spacing:.03em;color:#fff}
+    .team-banner.blue{background:linear-gradient(180deg,#2b97ff,#006dff)}
+    .team-banner.red{background:linear-gradient(180deg,#ff4747,#ff2121)}
+
+    .score-area{padding:10px 18px 0}
+    .score-display{text-align:center;font-family:'Orbitron', 'Anton', sans-serif;font-size:220px;line-height:.88;letter-spacing:-.04em;color:#f9f9f9;text-shadow:0 0 22px rgba(255,255,255,.08), 0 0 8px rgba(255,255,255,.05);user-select:none}
+
+    .points-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:6px 18px 0}
+    .points-grid .wide-center{grid-column:2/3}
+    .score-btn{
+      min-height:88px;border:none;border-radius:18px;color:#fff;font-size:56px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2), 0 10px 20px rgba(0,0,0,.32)
+    }
+    .score-btn.blue{background:linear-gradient(180deg,#2a8eff,#005df1)}
+    .score-btn.red{background:linear-gradient(180deg,#ff4d4d,#df1212)}
+    .score-btn.minus{background:linear-gradient(180deg,#18243d,#061747)}
+    .team-box.red .score-btn.minus{background:linear-gradient(180deg,#4a1212,#390505)}
+
+    .under-team-actions{display:flex;justify-content:flex-start;gap:14px;padding-top:16px}
+    .under-team-actions.right{justify-content:flex-end}
+    .mini-control{min-width:220px;display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#121419,#07080c);color:#fff;font-size:22px;text-transform:uppercase;cursor:pointer}
+    .mini-control .material-symbols-rounded{font-size:34px}
+
+    .center-col{display:flex;flex-direction:column;align-items:center;padding-top:6px}
+    .chrono-label,.section-label{font-size:28px;text-transform:uppercase;color:#fff;text-align:center}
+    .chrono-label{margin:12px 0 8px}
+    .chrono-box{width:100%;max-width:350px;border-radius:24px;border:2px solid rgba(255,255,255,.16);background:linear-gradient(180deg,#0a0b0f,#020202);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 8px 24px rgba(0,0,0,.38);padding:16px 14px}
+    .chrono-display{text-align:center;font-family:'Orbitron', monospace;font-weight:900;letter-spacing:.04em;font-size:88px;line-height:1;color:#f6f6f6;text-shadow:0 0 12px rgba(255,255,255,.07)}
+    .transport{display:flex;gap:14px;margin:14px 0 18px}
+    .transport-btn{width:108px;height:76px;border-radius:18px;border:2px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.28)}
+    .transport-btn .material-symbols-rounded{font-size:42px}
+    .play-btn{background:linear-gradient(180deg,#143922,#0f2417);color:#20ff72;border-color:rgba(35,255,117,.28)}
+    .pause-btn{background:linear-gradient(180deg,#35383d,#1f2127);color:#fff}
+
+    .section-label{font-size:21px;margin:0 0 6px}
+    .time-setter{width:100%;max-width:340px;display:grid;grid-template-columns:78px 1fr 78px;border-radius:18px;overflow:hidden;border:2px solid rgba(255,255,255,.22);background:linear-gradient(180deg,#101216,#0a0b0e);box-shadow:0 8px 18px rgba(0,0,0,.28)}
+    .time-change,.time-value{min-height:66px;display:flex;align-items:center;justify-content:center}
+    .time-change{background:linear-gradient(180deg,#191d23,#0b0c10);font-size:50px;font-weight:900;color:#fff;border:none;cursor:pointer;line-height:1;padding-bottom:4px}
+    .time-value{font-family:'Orbitron', monospace;font-weight:900;font-size:46px}
+    .time-helper{font-size:16px;color:#e0e0e0;opacity:.88;margin:8px 0 14px}
+
+    .buzzer-label{font-size:22px;text-transform:uppercase;margin:6px 0 8px}
+    .buzzer-btn{width:100%;max-width:240px;min-height:62px;border:none;border-radius:18px;background:linear-gradient(180deg,#ff4c4c,#df1111);color:#fff;display:flex;gap:10px;justify-content:center;align-items:center;font-size:20px;text-transform:uppercase;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16), 0 10px 18px rgba(97,0,0,.42)}
+    .buzzer-btn.is-on{box-shadow:0 0 0 2px rgba(255,255,255,.18) inset, 0 0 16px rgba(255,35,35,.3), 0 10px 18px rgba(97,0,0,.42)}
+    .buzzer-btn .material-symbols-rounded{font-size:28px;font-variation-settings:'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24}
+
+    .reset-btn{width:100%;max-width:420px;min-height:104px;margin-top:30px;border:none;border-radius:20px;background:linear-gradient(180deg,#f0bc22,#b67b00);color:#fff;display:flex;align-items:center;justify-content:center;gap:16px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14), 0 10px 24px rgba(120,76,0,.42)}
+    .reset-title{font-size:52px;line-height:.88;white-space:nowrap}
+    .reset-sub{font-size:18px;line-height:1;text-transform:uppercase;white-space:nowrap}
+    .reset-btn .material-symbols-rounded{font-size:52px}
+
+    .display-actions{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;justify-content:center}
+    .display-pill{border:1px solid rgba(255,255,255,.16);background:linear-gradient(180deg,#17191e,#0c0d11);color:#fff;border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:14px}
+    .display-pill .material-symbols-rounded{font-size:18px}
+
+    .help-sheet{border-top:1px solid rgba(255,255,255,.12);margin-top:2px;background:linear-gradient(180deg,#060709,#020202);overflow:hidden;max-height:0;transition:max-height .35s ease, padding .35s ease;padding:0 10px}
+    .help-sheet.open{max-height:780px;padding:12px 10px 12px}
+    .help-header{display:flex;justify-content:space-between;align-items:center;padding:0 10px 10px}
+    .help-title{font-size:28px;text-transform:uppercase;letter-spacing:.03em}
+    .help-grid{display:grid;grid-template-columns:1.05fr 1.05fr 1.05fr .9fr 1.1fr;gap:12px;padding:0 6px}
+    .help-card{border-radius:22px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,#0e1014,#040505);padding:14px 16px;min-height:290px;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.34)}
+    .help-card h3{margin:0 0 12px;font-size:24px;line-height:1.1;text-transform:uppercase}
+    .help-card p,.help-card li{margin:0 0 10px;font-size:20px;line-height:1.35;color:#f1f1f1;font-family:Arial,sans-serif;letter-spacing:0}
+    .help-card ul{margin:0;padding-left:18px}
+    .help-blue h3{color:var(--help-blue)} .help-green h3{color:var(--help-green)} .help-yellow h3{color:var(--help-yellow)} .help-violet h3{color:var(--help-violet)}
+    .help-logos-row{display:flex;gap:8px;margin:10px 0 6px}.help-logos-row img{width:58px;height:58px;object-fit:contain;border-radius:14px;background:#080a10;border:1px solid rgba(255,255,255,.09);padding:4px}
+    .help-demo-score{display:flex;align-items:center;justify-content:space-between;margin-top:auto;font-family:'Orbitron',sans-serif;font-size:58px;line-height:1;color:#fff}.help-demo-score .burst{color:#ffe155;text-shadow:0 0 10px rgba(255,225,85,.4)}
+    .help-footer{display:flex;justify-content:space-between;align-items:center;padding:12px 10px 2px;gap:14px}
+    .tip{font-size:24px;color:#ffd845;font-weight:900}.tip span{color:#fff;font-weight:700}
+    .close-help-btn{border:1px solid rgba(255,193,61,.36);background:linear-gradient(180deg,#3d320b,#1d1506);color:#ffd34e;border-radius:14px;padding:10px 16px;text-transform:uppercase;cursor:pointer;font-size:18px}
+
+    .flash{position:fixed;inset:0;background:#fff;pointer-events:none;opacity:0;z-index:90}.flash.on{animation:flashPoint .5s ease-out}
+    @keyframes flashPoint{0%{opacity:0} 8%{opacity:.95} 20%{opacity:0} 32%{opacity:.64} 45%{opacity:0} 56%{opacity:.42} 100%{opacity:0}}
+
+    body.tv-mode .shell{max-width:none}
+    body.tv-mode .frame{border-radius:0;height:100vh;min-height:100vh}
+    body.tv-mode .main{grid-template-columns:minmax(34%,1fr) minmax(24%,.8fr) minmax(34%,1fr);padding:26px 24px 14px;gap:24px}
+    body.tv-mode .brand-img{max-width:540px}
+    body.tv-mode .score-display{font-size:min(28vw, 380px)}
+    body.tv-mode .score-btn{min-height:110px;font-size:72px}
+    body.tv-mode .logo-choice{width:150px;height:150px}
+    body.tv-mode .team-banner{font-size:50px}
+    body.tv-mode .chrono-display{font-size:116px}
+    body.tv-mode .transport-btn{width:124px;height:90px}
+    body.tv-mode .time-setter{max-width:360px}.time-change{font-size:58px}.time-value{font-size:52px}
+    body.tv-mode .buzzer-btn{min-height:68px;font-size:22px;max-width:260px}
+    body.tv-mode .reset-title{font-size:60px}.reset-sub{font-size:20px}
+    body.tv-mode .help-card{min-height:340px} body.tv-mode .help-card p,body.tv-mode .help-card li{font-size:24px}
+
+    @media (max-width: 1500px){.score-display{font-size:200px}.help-grid{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width: 1200px){.main{grid-template-columns:1fr;gap:14px}.center-col{order:2}.main > .left-col{order:1}.main > .right-col{order:3}.logos-row{justify-content:center}.help-grid{grid-template-columns:repeat(2,1fr)}.utility-label{display:none}.brand{padding-top:12px}.under-team-actions{justify-content:center}.under-team-actions.right{justify-content:center}}
+    @media (max-width: 760px){.logo-choice{width:90px;height:90px}.team-banner{font-size:28px}.score-display{font-size:138px}.score-btn{min-height:74px;font-size:42px}.chrono-display{font-size:72px}.transport-btn{width:90px;height:68px}.time-setter{grid-template-columns:64px 1fr 64px;max-width:300px}.time-change,.time-value{min-height:60px}.time-change{font-size:42px;padding-bottom:2px}.time-value{font-size:38px}.buzzer-btn{max-width:220px;min-height:58px;font-size:17px}.reset-btn{min-height:84px}.reset-title{font-size:38px}.reset-sub{font-size:14px}.help-grid{grid-template-columns:1fr}.help-card{min-height:auto}.help-card p,.help-card li{font-size:17px}.help-title{font-size:20px}.tip{font-size:16px}.close-help-btn{font-size:14px}.utility-btn{width:50px;height:50px}#btnMenu{left:12px} #btnSound{right:12px}.brand-img{max-width:270px}.main{padding:18px 10px 12px}.mini-control{min-width:180px;font-size:18px}}
+  </style>
+</head>
+<body>
+  <div class="flash" id="flash"></div>
+  <div class="shell">
+    <button class="utility-btn" id="btnMenu" aria-label="Menu"><span class="material-symbols-rounded">menu</span></button>
+    <div class="utility-label" id="menuLabel">MENU</div>
+    <button class="utility-btn" id="btnSound" aria-label="Activer ou couper tous les sons"><span class="material-symbols-rounded" id="soundTopIcon">volume_up</span></button>
+
+    <div class="frame">
+      <div class="main">
+        <div class="brand">
+          <div class="brand-wrap">
+            <img class="brand-img" id="brandImg" src="img/bascketscore.png" alt="Basket Score" onerror="this.onerror=null;this.src='img/basketscore.png'">
+            <div class="brand-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+          </div>
+        </div>
+
+        <section class="left-col">
+          <div class="logos-row" id="blueLogos"></div>
+          <div class="team-box blue">
+            <div class="team-banner blue" id="blueTeamNameLabel">Équipe Bleue</div>
+            <div class="score-area"><div class="score-display" id="scoreBlue">0</div></div>
+            <div class="points-grid">
+              <button class="score-btn blue" data-team="blue" data-points="1">+1</button>
+              <button class="score-btn blue" data-team="blue" data-points="2">+2</button>
+              <button class="score-btn blue" data-team="blue" data-points="3">+3</button>
+              <button class="score-btn minus wide-center" data-team="blue" data-points="-1">-1</button>
+            </div>
+          </div>
+          <div class="under-team-actions">
+            <button class="mini-control" id="btnCycleBlue"><span class="material-symbols-rounded">sync</span><span>Changer les logos</span></button>
+          </div>
+        </section>
+
+        <section class="center-col">
+          <div class="chrono-label">Chrono</div>
+          <div class="chrono-box"><div class="chrono-display" id="chrono">05:00</div></div>
+          <div class="transport">
+            <button class="transport-btn play-btn" id="btnPlay" aria-label="Démarrer"><span class="material-symbols-rounded">play_arrow</span></button>
+            <button class="transport-btn pause-btn" id="btnPause" aria-label="Pause"><span class="material-symbols-rounded">pause</span></button>
+          </div>
+
+          <div class="section-label">Temps du chrono</div>
+          <div class="time-setter">
+            <button class="time-change" id="btnTimeMinus">−</button>
+            <div class="time-value" id="timePreset">05:00</div>
+            <button class="time-change" id="btnTimePlus">+</button>
+          </div>
+          <div class="time-helper">De 30 sec à 20 min</div>
+
+          <div class="buzzer-label">Buzzer</div>
+          <button class="buzzer-btn" id="btnBuzzerAuto"><span class="material-symbols-rounded">notifications_active</span><span id="buzzerAutoText">Activer</span></button>
+
+          <button class="reset-btn" id="btnResetAll">
+            <span class="material-symbols-rounded">autorenew</span>
+            <div><div class="reset-title">RESET</div><div class="reset-sub">Tout remettre à zéro</div></div>
+          </button>
+
+          <div class="display-actions">
+            <button class="display-pill" id="btnTvMode"><span class="material-symbols-rounded">tv</span><span id="tvText">Mode TV</span></button>
+            <button class="display-pill" id="btnFullscreen"><span class="material-symbols-rounded">fullscreen</span><span id="fullscreenText">Plein écran</span></button>
+          </div>
+        </section>
+
+        <section class="right-col">
+          <div class="logos-row" id="redLogos"></div>
+          <div class="team-box red">
+            <div class="team-banner red" id="redTeamNameLabel">Équipe Rouge</div>
+            <div class="score-area"><div class="score-display" id="scoreRed">0</div></div>
+            <div class="points-grid">
+              <button class="score-btn red" data-team="red" data-points="1">+1</button>
+              <button class="score-btn red" data-team="red" data-points="2">+2</button>
+              <button class="score-btn red" data-team="red" data-points="3">+3</button>
+              <button class="score-btn minus wide-center" data-team="red" data-points="-1">-1</button>
+            </div>
+          </div>
+          <div class="under-team-actions right">
+            <button class="mini-control" id="btnNewMatch"><span class="material-symbols-rounded">trophy</span><span>Nouveau match</span></button>
+          </div>
+        </section>
+      </div>
+
+      <section class="help-sheet" id="helpSheet">
+        <div class="help-header"><div class="help-title">Comment utiliser l'app — v3.2</div></div>
+        <div class="help-grid">
+          <article class="help-card help-blue">
+            <h3>1. Changer les logos</h3>
+            <p>Clique sur un logo pour le sélectionner, ou utilise le bouton <strong>Changer les logos</strong>.</p>
+            <div class="help-logos-row"><img src="img/bleulogo1.png" alt="Logo bleu 1"><img src="img/bleulogo2.png" alt="Logo bleu 2"><img src="img/bleulogo3.png" alt="Logo bleu 3"></div>
+            <div class="help-logos-row"><img src="img/redlogo1.png" alt="Logo rouge 1"><img src="img/redlogo2.png" alt="Logo rouge 2"><img src="img/redlogo3.png" alt="Logo rouge 3"></div>
+            <p>Le logo sélectionné est entouré.</p>
+          </article>
+          <article class="help-card help-blue">
+            <h3>2. Ajouter / retirer des points</h3>
+            <p>Utilise <strong>+1</strong>, <strong>+2</strong> ou <strong>+3</strong> pour ajouter des points. Utilise <strong>-1</strong> pour corriger.</p>
+            <p>L'écran clignote à chaque point marqué.</p>
+            <div class="help-demo-score"><span>12</span><span>→</span><span class="burst">12</span></div>
+          </article>
+          <article class="help-card help-green">
+            <h3>3. Chrono &amp; buzzer</h3>
+            <ul>
+              <li><strong>▶</strong> démarre le chrono.</li>
+              <li><strong>❚❚</strong> met le chrono en pause.</li>
+              <li><strong>− / +</strong> changent le temps de référence par pas de 30 secondes.</li>
+              <li><strong>ACTIVER</strong> active le buzzer de fin de chrono.</li>
+            </ul>
+          </article>
+          <article class="help-card help-yellow">
+            <h3>4. Reset</h3>
+            <p><strong>RESET</strong> remet tout à zéro.</p>
+            <p><strong>NOUVEAU MATCH</strong> remet seulement le score et le chrono à zéro, en gardant les noms et les logos.</p>
+            <div class="help-demo-score" style="font-size:52px"><span>0</span><span>→</span><span>0</span></div>
+          </article>
+          <article class="help-card help-violet">
+            <h3>Fonctionnalités</h3>
+            <ul>
+              <li>Effet lumineux à chaque point</li>
+              <li>Buzzer réaliste à la fin du chrono</li>
+              <li>Mode TV &amp; plein écran</li>
+              <li>Sauvegarde locale automatique</li>
+              <li>Icônes standard Material Symbols</li>
+            </ul>
+          </article>
+        </div>
+        <div class="help-footer"><div class="tip">★ <span>Astuce :</span> Ajoute l'app à ton écran d'accueil pour y accéder en 1 clic !</div><button class="close-help-btn" id="btnCloseHelp">Fermer ✕</button></div>
+      </section>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'basket-scoreboard-v3.2';
+  const PRESET_MIN = 30;
+  const PRESET_MAX = 20 * 60;
+  const PRESET_STEP = 30;
+
+  const blueAssets = ['img/bleulogo1.png','img/bleulogo2.png','img/bleulogo3.png'];
+  const redAssets  = ['img/redlogo1.png','img/redlogo2.png','img/redlogo3.png'];
+
+  const defaultState = {
+    version: 'v3.2',
+    blueName: 'Équipe Bleue',
+    redName: 'Équipe Rouge',
+    blueScore: 12,
+    redScore: 8,
+    blueLogo: 0,
+    redLogo: 0,
+    presetSeconds: 5 * 60,
+    remainingSeconds: 5 * 60,
+    running: false,
+    soundEnabled: true,
+    buzzerAutoEnabled: false,
+    helpOpen: false,
+    tvMode: false
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    scoreBlue: $('scoreBlue'), scoreRed: $('scoreRed'), chrono: $('chrono'), timePreset: $('timePreset'),
+    blueTeamNameLabel: $('blueTeamNameLabel'), redTeamNameLabel: $('redTeamNameLabel'),
+    blueLogos: $('blueLogos'), redLogos: $('redLogos'), flash: $('flash'), helpSheet: $('helpSheet'),
+    btnMenu: $('btnMenu'), btnCloseHelp: $('btnCloseHelp'), btnCycleBlue: $('btnCycleBlue'), btnNewMatch: $('btnNewMatch'),
+    btnPlay: $('btnPlay'), btnPause: $('btnPause'), btnTimeMinus: $('btnTimeMinus'), btnTimePlus: $('btnTimePlus'),
+    btnResetAll: $('btnResetAll'), btnTvMode: $('btnTvMode'), btnFullscreen: $('btnFullscreen'),
+    tvText: $('tvText'), fullscreenText: $('fullscreenText'), btnSound: $('btnSound'), soundTopIcon: $('soundTopIcon'),
+    btnBuzzerAuto: $('btnBuzzerAuto'), buzzerAutoText: $('buzzerAutoText')
+  };
+
+  let state = loadState();
+  let interval = null;
+  let endTimestamp = null;
+  let audioCtx = null;
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return structuredClone(defaultState);
+      return { ...structuredClone(defaultState), ...JSON.parse(raw), running: false };
+    } catch {
+      return structuredClone(defaultState);
+    }
+  }
+  function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, running: false })); }
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function createNoise(duration = 0.22, startAt = 0, volume = 0.18) {
+    if (!audioCtx || !state.soundEnabled) return;
+    const sampleRate = audioCtx.sampleRate;
+    const buffer = audioCtx.createBuffer(1, Math.floor(sampleRate * duration), sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    const bandpass = audioCtx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = 1400;
+    bandpass.Q.value = 0.7;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime + startAt);
+    gain.gain.exponentialRampToValueAtTime(volume, audioCtx.currentTime + startAt + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + startAt + duration);
+    source.connect(bandpass).connect(gain).connect(audioCtx.destination);
+    source.start(audioCtx.currentTime + startAt);
+    source.stop(audioCtx.currentTime + startAt + duration + 0.02);
+  }
+
+  function createBuzz(freq = 170, duration = 0.26, startAt = 0, volume = 0.15) {
+    if (!audioCtx || !state.soundEnabled) return;
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    osc1.type = 'sawtooth';
+    osc2.type = 'square';
+    osc1.frequency.value = freq;
+    osc2.frequency.value = freq * 1.012;
+    const lowpass = audioCtx.createBiquadFilter();
+    lowpass.type = 'lowpass';
+    lowpass.frequency.value = 900;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime + startAt);
+    gain.gain.exponentialRampToValueAtTime(volume, audioCtx.currentTime + startAt + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + startAt + duration);
+    osc1.connect(lowpass); osc2.connect(lowpass);
+    lowpass.connect(gain).connect(audioCtx.destination);
+    osc1.start(audioCtx.currentTime + startAt); osc2.start(audioCtx.currentTime + startAt);
+    osc1.stop(audioCtx.currentTime + startAt + duration + 0.02); osc2.stop(audioCtx.currentTime + startAt + duration + 0.02);
+  }
+
+  function playPointSound() {
+    ensureAudio();
+    if (!state.soundEnabled || !audioCtx) return;
+    createBuzz(520, 0.07, 0, 0.05);
+    createBuzz(720, 0.07, 0.08, 0.045);
+  }
+
+  function playBuzzer() {
+    ensureAudio();
+    if (!state.soundEnabled || !audioCtx) return;
+    createBuzz(180, 0.22, 0, 0.12);
+    createNoise(0.18, 0.02, 0.14);
+    createBuzz(185, 0.22, 0.28, 0.12);
+    createNoise(0.18, 0.3, 0.14);
+    createBuzz(170, 0.42, 0.58, 0.15);
+    createNoise(0.32, 0.6, 0.16);
+  }
+
+  function fmt(seconds) {
+    const mm = Math.floor(seconds / 60), ss = seconds % 60;
+    return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+  }
+  function clampPreset(v) { return Math.max(PRESET_MIN, Math.min(PRESET_MAX, v)); }
+  function flashPoint() { el.flash.classList.remove('on'); void el.flash.offsetWidth; el.flash.classList.add('on'); }
+
+  function renderLogos(container, assets, activeIndex, cls, team) {
+    container.innerHTML = '';
+    assets.forEach((src, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'logo-choice' + (idx === activeIndex ? ' ' + cls : '');
+      btn.innerHTML = `<img src="${src}" alt="logo ${idx + 1}">`;
+      btn.addEventListener('click', () => { if (team === 'blue') state.blueLogo = idx; else state.redLogo = idx; render(); });
+      container.appendChild(btn);
+    });
+  }
+
+  function updateFullscreenLabel() {
+    el.fullscreenText.textContent = document.fullscreenElement ? 'Quitter' : 'Plein écran';
+  }
+
+  function updateIcons() {
+    el.soundTopIcon.textContent = state.soundEnabled ? 'volume_up' : 'volume_off';
+    el.btnBuzzerAuto.classList.toggle('is-on', !!state.buzzerAutoEnabled);
+    el.btnBuzzerAuto.querySelector('.material-symbols-rounded').textContent = state.buzzerAutoEnabled ? 'notifications_active' : 'notifications_off';
+    el.buzzerAutoText.textContent = state.buzzerAutoEnabled ? 'Activé' : 'Activer';
+  }
+
+  function render() {
+    document.body.classList.toggle('tv-mode', !!state.tvMode);
+    el.scoreBlue.textContent = state.blueScore;
+    el.scoreRed.textContent = state.redScore;
+    el.chrono.textContent = fmt(state.remainingSeconds);
+    el.timePreset.textContent = fmt(state.presetSeconds);
+    el.blueTeamNameLabel.textContent = state.blueName.toUpperCase();
+    el.redTeamNameLabel.textContent = state.redName.toUpperCase();
+    renderLogos(el.blueLogos, blueAssets, state.blueLogo, 'active-blue', 'blue');
+    renderLogos(el.redLogos, redAssets, state.redLogo, 'active-red', 'red');
+    el.helpSheet.classList.toggle('open', !!state.helpOpen);
+    el.tvText.textContent = state.tvMode ? 'Mode normal' : 'Mode TV';
+    updateFullscreenLabel();
+    updateIcons();
+    saveState();
+  }
+
+  function setScore(team, delta) {
+    if (team === 'blue') state.blueScore = Math.max(0, state.blueScore + delta);
+    if (team === 'red') state.redScore = Math.max(0, state.redScore + delta);
+    flashPoint();
+    playPointSound();
+    render();
+  }
+
+  function stopTimer(renderNow = true) {
+    if (interval) clearInterval(interval);
+    interval = null;
+    endTimestamp = null;
+    state.running = false;
+    if (renderNow) render();
+  }
+
+  function updateTimerFromEnd() {
+    if (!endTimestamp) return;
+    const ms = Math.max(0, endTimestamp - Date.now());
+    state.remainingSeconds = Math.ceil(ms / 1000);
+    if (state.remainingSeconds <= 0) {
+      state.remainingSeconds = 0;
+      stopTimer(false);
+      if (state.buzzerAutoEnabled) playBuzzer();
+      flashPoint();
+      render();
+    } else {
+      render();
+    }
+  }
+
+  function startTimer() {
+    ensureAudio();
+    if (state.remainingSeconds <= 0) state.remainingSeconds = state.presetSeconds;
+    state.running = true;
+    endTimestamp = Date.now() + state.remainingSeconds * 1000;
+    if (interval) clearInterval(interval);
+    interval = setInterval(updateTimerFromEnd, 200);
+    render();
+  }
+
+  function pauseTimer() {
+    if (!state.running) return;
+    if (endTimestamp) {
+      const ms = Math.max(0, endTimestamp - Date.now());
+      state.remainingSeconds = Math.ceil(ms / 1000);
+    }
+    stopTimer(true);
+  }
+
+  function changePreset(delta) {
+    state.presetSeconds = clampPreset(state.presetSeconds + delta);
+    if (!state.running) state.remainingSeconds = state.presetSeconds;
+    render();
+  }
+
+  function newMatch() {
+    stopTimer(false);
+    state.blueScore = 0;
+    state.redScore = 0;
+    state.remainingSeconds = state.presetSeconds;
+    render();
+  }
+
+  function resetAll() {
+    stopTimer(false);
+    state = structuredClone(defaultState);
+    render();
+  }
+
+  function toggleSound() { state.soundEnabled = !state.soundEnabled; render(); }
+  function toggleHelp() { state.helpOpen = !state.helpOpen; render(); }
+  function cycleBlueLogo() { state.blueLogo = (state.blueLogo + 1) % blueAssets.length; render(); }
+  function toggleBuzzerAuto() { state.buzzerAutoEnabled = !state.buzzerAutoEnabled; render(); }
+
+  async function toggleFullscreen() {
+    try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen?.(); } catch (e) {}
+    updateFullscreenLabel();
+  }
+  function toggleTvMode() { state.tvMode = !state.tvMode; render(); }
+
+  document.querySelectorAll('[data-team][data-points]').forEach(btn => btn.addEventListener('click', () => setScore(btn.dataset.team, parseInt(btn.dataset.points,10))));
+  el.btnPlay.addEventListener('click', startTimer);
+  el.btnPause.addEventListener('click', pauseTimer);
+  el.btnTimeMinus.addEventListener('click', () => changePreset(-PRESET_STEP));
+  el.btnTimePlus.addEventListener('click', () => changePreset(PRESET_STEP));
+  el.btnResetAll.addEventListener('click', resetAll);
+  el.btnNewMatch.addEventListener('click', newMatch);
+  el.btnMenu.addEventListener('click', toggleHelp);
+  el.btnCloseHelp.addEventListener('click', () => { state.helpOpen = false; render(); });
+  el.btnCycleBlue.addEventListener('click', cycleBlueLogo);
+  el.btnTvMode.addEventListener('click', toggleTvMode);
+  el.btnFullscreen.addEventListener('click', toggleFullscreen);
+  el.btnSound.addEventListener('click', toggleSound);
+  el.btnBuzzerAuto.addEventListener('click', toggleBuzzerAuto);
+
+  document.addEventListener('fullscreenchange', updateFullscreenLabel);
+  window.addEventListener('beforeunload', saveState);
+  window.addEventListener('keydown', (e) => {
+    if (e.key === ' ') { e.preventDefault(); state.running ? pauseTimer() : startTimer(); }
+    if (e.key.toLowerCase() === 'f') toggleFullscreen();
+    if (e.key.toLowerCase() === 'm') toggleSound();
+    if (e.key.toLowerCase() === 'b') toggleBuzzerAuto();
+    if (e.key.toLowerCase() === 't') toggleTvMode();
+    if (e.key === 'Escape' && state.helpOpen) { state.helpOpen = false; render(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
