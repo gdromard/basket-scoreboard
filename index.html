@@ -1,5 +1,5 @@
-<!-- version 2.0 -->
- <!DOCTYPE html>
+<!-- version 2.1 -->
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -92,6 +92,7 @@
     .btn.orange { background: #ffb020; }
     .btn.red { background: var(--red); color: #fff; }
     .btn.blue { background: #4db2ff; }
+    .btn.yellow { background: #ffd84d; }
     .btn.dark {
       background: #1c1d22;
       color: #fff;
@@ -275,7 +276,7 @@
     .menu-btn {
       position: fixed;
       top: max(14px, env(safe-area-inset-top));
-      left: 14px;
+      right: 14px;
       z-index: 30;
       width: 72px;
       height: 72px;
@@ -442,6 +443,7 @@
     <div class="topbar">
       <div class="actions">
         <button id="btnStartPause" class="btn green">Start</button>
+        <button id="btnManualBuzzer" class="btn yellow">Buzzer</button>
         <button id="btnResetChrono" class="btn orange">Reset chrono</button>
         <button id="btnResetAll" class="btn red">Reset match</button>
         <button id="btnFullscreen" class="btn dark">Plein écran</button>
@@ -507,8 +509,8 @@
     <div class="modal-card">
       <div class="modal-top">
         <div>
-          <h2>Comment prendre en main l'app</h2>
-          <div class="last-action">Version enfant — gros boutons, fond noir, lecture super lisible</div>
+          <h2>Comment prendre en main l'app — v2.2</h2>
+          <div class="last-action">Version enfant v2.2 — gros boutons, fond noir, lecture super lisible</div>
         </div>
         <button id="closeHelp" class="btn dark">Fermer</button>
       </div>
@@ -531,6 +533,7 @@
             <li>Entrez les <strong>minutes</strong> et <strong>secondes</strong>.</li>
             <li>Appuyez sur <strong>Définir</strong> pour appliquer le temps.</li>
             <li><strong>Start</strong> lance ou met en pause le chrono.</li>
+            <li>Le bouton <strong>Buzzer</strong> joue le buzzer manuellement.</li>
             <li>À <strong>00:00</strong>, un buzzer sonore retentit automatiquement.</li>
           </ul>
         </div>
@@ -538,7 +541,7 @@
         <div class="help-card">
           <h3>4. Plein écran</h3>
           <p>Le bouton <strong>Plein écran</strong> essaie d’ouvrir l’app en plein écran natif.</p>
-          <p>Si le navigateur iPad ne le permet pas, utilise <strong>Safari → Partager → Ajouter à l’écran d’accueil</strong> pour un affichage quasi plein écran.</p>
+          <p>Si le navigateur iPad ne le permet pas, utilise <strong>Safari → Partager → Ajouter à l’écran d’accueil</strong>.</p>
         </div>
 
         <div class="help-card">
@@ -551,14 +554,14 @@
           <h3>6. Autres fonctionnalités</h3>
           <ul>
             <li>Sauvegarde locale automatique des scores, noms, logos et temps.</li>
-            <li>Interface conçue pour être lisible sur iPad au bord du terrain.</li>
-            <li>Le buzzer est joué avec le moteur audio du navigateur. Si le son ne démarre pas, touchez un bouton d'abord et vérifiez que l'iPad n'est pas en silencieux.</li>
+            <li>Interface optimisée pour iPad.</li>
+            <li>Si le son ne démarre pas, touchez un bouton d'abord et vérifiez que l'iPad n'est pas en silencieux.</li>
           </ul>
         </div>
       </div>
 
       <div class="footer-note">
-        Astuce : pour un accès en 1 clic, héberge ce fichier sur GitHub Pages puis ajoute-le à l'écran d'accueil.
+        Basket Score Kids v2.2
       </div>
     </div>
   </div>
@@ -588,6 +591,7 @@
       logoBlue: document.getElementById('logoBlue'),
       logoRed: document.getElementById('logoRed'),
       btnStartPause: document.getElementById('btnStartPause'),
+      btnManualBuzzer: document.getElementById('btnManualBuzzer'),
       btnResetChrono: document.getElementById('btnResetChrono'),
       btnResetAll: document.getElementById('btnResetAll'),
       btnApplyTime: document.getElementById('btnApplyTime'),
@@ -613,8 +617,9 @@
     };
 
     let state = loadState();
-    let interval = null;
+    let timerInterval = null;
     let audioCtx = null;
+    let endTime = null;
     let ended = false;
 
     function loadState() {
@@ -636,7 +641,9 @@
         const Ctx = window.AudioContext || window.webkitAudioContext;
         if (Ctx) audioCtx = new Ctx();
       }
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
     }
 
     function playTone(freq, duration, startAt = 0) {
@@ -678,6 +685,19 @@
       return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
     }
 
+    function setLastAction(txt) {
+      els.lastAction.textContent = txt;
+    }
+
+    function flashScore() {
+      els.flash1.classList.remove('on');
+      els.flash2.classList.remove('on');
+      void els.flash1.offsetWidth;
+      void els.flash2.offsetWidth;
+      els.flash1.classList.add('on');
+      els.flash2.classList.add('on');
+    }
+
     function render() {
       els.scoreA.textContent = state.scoreA;
       els.scoreB.textContent = state.scoreB;
@@ -693,46 +713,66 @@
       saveState();
     }
 
-    function setLastAction(txt) {
-      els.lastAction.textContent = txt;
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      endTime = null;
+      state.running = false;
+      render();
     }
 
-    function flashScore() {
-      els.flash1.classList.remove('on');
-      els.flash2.classList.remove('on');
-      void els.flash1.offsetWidth;
-      void els.flash2.offsetWidth;
-      els.flash1.classList.add('on');
-      els.flash2.classList.add('on');
-    }
-
-    function startTimer() {
-      if (interval) clearInterval(interval);
-      interval = setInterval(() => {
-        if (!state.running) return;
-
-        if (state.remaining <= 0) {
-          state.running = false;
-          render();
-          clearInterval(interval);
-          interval = null;
-          return;
-        }
-
-        state.remaining -= 1;
+    function updateRemainingFromEndTime() {
+      if (!endTime) return;
+      const msLeft = Math.max(0, endTime - Date.now());
+      state.remaining = Math.ceil(msLeft / 1000);
+      if (state.remaining <= 0) {
+        state.remaining = 0;
         render();
-
-        if (state.remaining === 0 && !ended) {
+        stopTimer();
+        if (!ended) {
           ended = true;
-          state.running = false;
-          render();
           playBuzzer();
           flashScore();
           setLastAction('⏰ Fin du chrono');
-          clearInterval(interval);
-          interval = null;
         }
-      }, 1000);
+      } else {
+        render();
+      }
+    }
+
+    function startTimer() {
+      if (state.remaining <= 0) {
+        state.remaining = state.setMin * 60 + state.setSec;
+      }
+
+      ended = false;
+      state.running = true;
+      endTime = Date.now() + state.remaining * 1000;
+
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+
+      render();
+      updateRemainingFromEndTime();
+
+      timerInterval = setInterval(() => {
+        updateRemainingFromEndTime();
+      }, 250);
+    }
+
+    function pauseTimer() {
+      if (!state.running) return;
+      updateRemainingFromEndTime();
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      endTime = null;
+      state.running = false;
+      render();
     }
 
     function applyTime() {
@@ -741,14 +781,14 @@
       state.setMin = m;
       state.setSec = s;
       state.remaining = m * 60 + s;
-      state.running = false;
       ended = false;
+      pauseTimer();
       render();
       setLastAction('Temps défini à ' + fmtTime(state.remaining));
     }
 
     function resetChrono() {
-      state.running = false;
+      pauseTimer();
       state.remaining = state.setMin * 60 + state.setSec;
       ended = false;
       render();
@@ -756,14 +796,14 @@
     }
 
     function resetMatch() {
-      state.running = false;
+      pauseTimer();
       state.scoreA = 0;
       state.scoreB = 0;
       state.remaining = state.setMin * 60 + state.setSec;
       ended = false;
       render();
-      setLastAction('Match remis à zéro');
       flashScore();
+      setLastAction('Match remis à zéro');
     }
 
     function addPoints(team, pts) {
@@ -779,6 +819,13 @@
       setLastAction((team === 'A' ? state.teamA : state.teamB) + ' ' + (pts > 0 ? '+' : '') + pts);
     }
 
+    function manualBuzzer() {
+      ensureAudio();
+      playBuzzer();
+      flashScore();
+      setLastAction('🔔 Buzzer manuel');
+    }
+
     async function toggleFullscreen() {
       try {
         if (document.fullscreenElement) {
@@ -792,7 +839,7 @@
             setLastAction("Plein écran natif non disponible ici");
           }
         }
-      } catch (e) {
+      } catch {
         setLastAction("Plein écran non disponible dans ce contexte");
       } finally {
         render();
@@ -800,7 +847,9 @@
     }
 
     document.querySelectorAll('[data-team]').forEach(btn => {
-      btn.addEventListener('click', () => addPoints(btn.dataset.team, parseInt(btn.dataset.pts, 10)));
+      btn.addEventListener('click', () => {
+        addPoints(btn.dataset.team, parseInt(btn.dataset.pts, 10));
+      });
     });
 
     els.logoBlue.addEventListener('click', () => {
@@ -828,18 +877,18 @@
     els.btnApplyTime.addEventListener('click', applyTime);
     els.btnResetChrono.addEventListener('click', resetChrono);
     els.btnResetAll.addEventListener('click', resetMatch);
+    els.btnManualBuzzer.addEventListener('click', manualBuzzer);
     els.btnFullscreen.addEventListener('click', toggleFullscreen);
 
     els.btnStartPause.addEventListener('click', () => {
       ensureAudio();
-      if (state.remaining <= 0) {
-        state.remaining = state.setMin * 60 + state.setSec;
+      if (state.running) {
+        pauseTimer();
+        setLastAction('Chrono en pause');
+      } else {
+        startTimer();
+        setLastAction('Chrono lancé');
       }
-      state.running = !state.running;
-      ended = false;
-      render();
-      setLastAction(state.running ? 'Chrono lancé' : 'Chrono en pause');
-      startTimer();
     });
 
     els.helpBtn.addEventListener('click', () => {
@@ -853,7 +902,9 @@
     });
 
     els.helpModal.addEventListener('click', (e) => {
-      if (e.target === els.helpModal) els.closeHelp.click();
+      if (e.target === els.helpModal) {
+        els.closeHelp.click();
+      }
     });
 
     document.addEventListener('fullscreenchange', render);
